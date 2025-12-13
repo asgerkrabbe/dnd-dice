@@ -26,7 +26,7 @@ Produces a self-contained folder you can copy to another Windows 11 machine.
 dotnet publish DiceRoller.Wpf -c Release -r win-x64 --self-contained true
 ```
 
-You can add `/p:PublishSingleFile=true` to emit a single-file executable if desired.
+You can add `-p:PublishSingleFile=true` to emit a single-file executable if desired.
 
 ## Usage
 1. Enter a dice expression such as `1d20+5`, `4d6`, or `2d8-1`.
