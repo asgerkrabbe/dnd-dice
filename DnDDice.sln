@@ -1,33 +1,34 @@
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceEngine", "DiceEngine\\DiceEngine.csproj", "{430D385D-8851-45DE-97F1-0087FCC47CF8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceEngine", "DiceEngine\DiceEngine.csproj", "{430D385D-8851-45DE-97F1-0087FCC47CF8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceEngine.Tests", "DiceEngine.Tests\\DiceEngine.Tests.csproj", "{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceEngine.Tests", "DiceEngine.Tests\DiceEngine.Tests.csproj", "{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceRoller.Wpf", "DiceRoller.Wpf\\DiceRoller.Wpf.csproj", "{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiceRoller.Wpf", "DiceRoller.Wpf\DiceRoller.Wpf.csproj", "{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}"
 EndProject
 Global
-GlobalSection(SolutionConfigurationPlatforms) = preSolution
-Debug|Any CPU = Debug|Any CPU
-Release|Any CPU = Release|Any CPU
-EndGlobalSection
-GlobalSection(SolutionProperties) = preSolution
-HideSolutionNode = FALSE
-EndGlobalSection
-GlobalSection(ProjectConfigurationPlatforms) = postSolution
-{430D385D-8851-45DE-97F1-0087FCC47CF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-{430D385D-8851-45DE-97F1-0087FCC47CF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-{430D385D-8851-45DE-97F1-0087FCC47CF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-{430D385D-8851-45DE-97F1-0087FCC47CF8}.Release|Any CPU.Build.0 = Release|Any CPU
-{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}.Debug|Any CPU.Build.0 = Debug|Any CPU
-{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}.Release|Any CPU.ActiveCfg = Release|Any CPU
-{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}.Release|Any CPU.Build.0 = Release|Any CPU
-{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}.Release|Any CPU.Build.0 = Release|Any CPU
-EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{430D385D-8851-45DE-97F1-0087FCC47CF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{430D385D-8851-45DE-97F1-0087FCC47CF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{430D385D-8851-45DE-97F1-0087FCC47CF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{430D385D-8851-45DE-97F1-0087FCC47CF8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A67FF3B-4A6A-48E9-A4D7-33DE82453458}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E26B4367-AABF-4D53-ADD2-35A0505B6A4E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 EndGlobal
