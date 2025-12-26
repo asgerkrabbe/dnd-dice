@@ -1,13 +1,18 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Text.Json;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using System.Windows;
 using DiceEngine.Models;
 using DiceEngine.Parsing;
 using DiceEngine.Rolling;
 using DiceRoller.Wpf.Commands;
+using DiceRoller.Wpf.Models;
 
 namespace DiceRoller.Wpf.ViewModels;
 
@@ -25,15 +30,26 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _rollsText = "Rolls: -";
     private string _advantageText = string.Empty;
     private string _statusMessage = string.Empty;
+    private bool _isHistoryCollapsed = false;
 
     public MainViewModel(DiceParser parser, DiceEngine.Rolling.DiceRoller roller)
     {
         _parser = parser ?? throw new ArgumentNullException(nameof(parser));
         _roller = roller ?? throw new ArgumentNullException(nameof(roller));
+        RollHistory = new ObservableCollection<string>();
+        Macros = new ObservableCollection<Macro>();
         RollCommand = new RelayCommand(ExecuteRoll);
         SelectDiceTypeCommand = new RelayCommand<string>(ExecuteSelectDiceType);
         SelectQuantityCommand = new RelayCommand<int>(ExecuteSelectQuantity);
         SelectModifierCommand = new RelayCommand<int>(ExecuteSelectModifier);
+        ExecuteMacroCommand = new RelayCommand<Macro>(ExecuteMacro);
+        SaveMacroCommand = new RelayCommand(ExecuteSaveMacro);
+        DeleteMacroCommand = new RelayCommand(ExecuteDeleteMacro);
+        ClearHistoryCommand = new RelayCommand(ExecuteClearHistory);
+        CopyTextCommand = new RelayCommand<string>(ExecuteCopyText);
+        ToggleHistoryCollapsedCommand = new RelayCommand(ExecuteToggleHistoryCollapsed);
+
+        LoadMacros();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -42,6 +58,15 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand SelectDiceTypeCommand { get; }
     public ICommand SelectQuantityCommand { get; }
     public ICommand SelectModifierCommand { get; }
+    public ICommand ExecuteMacroCommand { get; }
+    public ICommand SaveMacroCommand { get; }
+    public ICommand DeleteMacroCommand { get; }
+    public ICommand ClearHistoryCommand { get; }
+    public ICommand CopyTextCommand { get; }
+    public ICommand ToggleHistoryCollapsedCommand { get; }
+
+    public ObservableCollection<string> RollHistory { get; }
+    public ObservableCollection<Macro> Macros { get; }
 
     public IReadOnlyList<RollMode> RollModes { get; } = Enum.GetValues<RollMode>();
 
@@ -149,6 +174,54 @@ public sealed class MainViewModel : INotifyPropertyChanged
         private set => SetField(ref _statusMessage, value);
     }
 
+    public bool IsHistoryCollapsed
+    {
+        get => _isHistoryCollapsed;
+        set => SetField(ref _isHistoryCollapsed, value);
+    }
+
+    // Macro editing fields
+    private string _macroName = string.Empty;
+    private string _macroHitExpression = string.Empty;
+    private string _macroDamageExpression = string.Empty;
+    private Macro? _selectedMacro;
+
+    public string MacroName
+    {
+        get => _macroName;
+        set => SetField(ref _macroName, value);
+    }
+
+    public string MacroHitExpression
+    {
+        get => _macroHitExpression;
+        set => SetField(ref _macroHitExpression, value);
+    }
+
+    public string MacroDamageExpression
+    {
+        get => _macroDamageExpression;
+        set => SetField(ref _macroDamageExpression, value);
+    }
+
+    public Macro? SelectedMacro
+    {
+        get => _selectedMacro;
+        set
+        {
+            if (SetField(ref _selectedMacro, value))
+            {
+                // Populate fields when selecting a macro for editing
+                if (value is not null)
+                {
+                    MacroName = value.Name;
+                    MacroHitExpression = value.HitExpression;
+                    MacroDamageExpression = value.DamageExpression;
+                }
+            }
+        }
+    }
+
     private void ExecuteSelectDiceType(string? diceType)
     {
         if (!string.IsNullOrEmpty(diceType))
@@ -192,7 +265,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         if (rollResult.Advantage is { } adv)
         {
-            AdvantageText = $"Advantage rolls: {string.Join(", ", adv.Rolls)} (kept #{adv.KeptIndex + 1}: {adv.KeptValue})";
+            var modeText = rollResult.RollMode == RollMode.Advantage ? "Advantage" : "Disadvantage";
+            AdvantageText = $"{modeText} rolls: {string.Join(", ", adv.Rolls)} (kept #{adv.KeptIndex + 1}: {adv.KeptValue})";
         }
         else
         {
@@ -200,6 +274,244 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         StatusMessage = $"Rolled {rollResult.NormalizedExpression} in {rollResult.RollMode} mode.";
+        
+        // Add to history
+        var historyEntry = $"[{DateTime.Now:HH:mm}] {rollResult.NormalizedExpression} = {rollResult.Total}";
+        if (rollResult.Advantage is { } advHistory)
+        {
+            var modeLabel = rollResult.RollMode == RollMode.Advantage ? "Adv" : "Dis";
+            historyEntry += $" ({modeLabel}, kept {advHistory.KeptValue})";
+        }
+        RollHistory.Insert(0, historyEntry);
+        
+        // Keep history limited to 50 entries
+        while (RollHistory.Count > 50)
+        {
+            RollHistory.RemoveAt(RollHistory.Count - 1);
+        }
+    }
+
+    private void ExecuteMacro(Macro? macro)
+    {
+        if (macro is null)
+        {
+            return;
+        }
+        // Parse expressions
+        var hitParse = _parser.TryParse(macro.HitExpression);
+        var dmgParse = _parser.TryParse(macro.DamageExpression);
+
+        RollResult? hitResult = null;
+        RollResult? dmgResult = null;
+
+        // Execute hit (uses current roll mode for adv/dis)
+        if (hitParse.Success && hitParse.Expression is not null)
+        {
+            hitResult = _roller.Roll(hitParse.Expression, SelectedRollMode, macro.HitExpression);
+        }
+
+        // Execute damage (always normal mode)
+        if (dmgParse.Success && dmgParse.Expression is not null)
+        {
+            dmgResult = _roller.Roll(dmgParse.Expression, RollMode.Normal, macro.DamageExpression);
+        }
+
+        // Update UI result fields in fixed order: Hit first, Damage second
+        if (hitResult is not null && dmgResult is not null)
+        {
+            TotalText = $"Total: Hit {hitResult.Total}, Damage {dmgResult.Total}";
+            RollsText =
+                $"Rolls: Hit {string.Join(", ", hitResult.Rolls)} (modifier {hitResult.Modifier:+#;-#;0}); " +
+                $"Damage {string.Join(", ", dmgResult.Rolls)} (modifier {dmgResult.Modifier:+#;-#;0})";
+
+            if (hitResult.Advantage is { } adv)
+            {
+                var modeText = hitResult.RollMode == RollMode.Advantage ? "Advantage" : "Disadvantage";
+                AdvantageText = $"{modeText} (hit) rolls: {string.Join(", ", adv.Rolls)} (kept #{adv.KeptIndex + 1}: {adv.KeptValue})";
+            }
+            else
+            {
+                AdvantageText = string.Empty;
+            }
+
+            StatusMessage = $"Macro '{macro.Name}' executed: hit {hitResult.NormalizedExpression} ({hitResult.RollMode}), damage {dmgResult.NormalizedExpression} (Normal).";
+
+            // Single combined history entry to preserve order
+            var historyEntry = $"[{DateTime.Now:HH:mm}] {macro.Name} - Hit: {hitResult.NormalizedExpression} = {hitResult.Total}; Dmg: {dmgResult.NormalizedExpression} = {dmgResult.Total}";
+            if (hitResult.Advantage is { } advHistory)
+            {
+                var modeLabel = hitResult.RollMode == RollMode.Advantage ? "Adv" : "Dis";
+                historyEntry += $" ({modeLabel}, kept {advHistory.KeptValue})";
+            }
+            RollHistory.Insert(0, historyEntry);
+        }
+        else if (hitResult is not null)
+        {
+            TotalText = $"Total: Hit {hitResult.Total}";
+            RollsText = $"Rolls: Hit {string.Join(", ", hitResult.Rolls)} (modifier {hitResult.Modifier:+#;-#;0})";
+            AdvantageText = hitResult.Advantage is { } adv
+                ? $"{(hitResult.RollMode == RollMode.Advantage ? "Advantage" : "Disadvantage")} (hit) rolls: {string.Join(", ", adv.Rolls)} (kept #{adv.KeptIndex + 1}: {adv.KeptValue})"
+                : string.Empty;
+            StatusMessage = $"Macro '{macro.Name}' executed: hit {hitResult.NormalizedExpression} ({hitResult.RollMode}).";
+            RollHistory.Insert(0, $"[{DateTime.Now:HH:mm}] {macro.Name} - Hit: {hitResult.NormalizedExpression} = {hitResult.Total}");
+        }
+        else if (dmgResult is not null)
+        {
+            TotalText = $"Total: Damage {dmgResult.Total}";
+            RollsText = $"Rolls: Damage {string.Join(", ", dmgResult.Rolls)} (modifier {dmgResult.Modifier:+#;-#;0})";
+            AdvantageText = string.Empty;
+            StatusMessage = $"Macro '{macro.Name}' executed: damage {dmgResult.NormalizedExpression} (Normal).";
+            RollHistory.Insert(0, $"[{DateTime.Now:HH:mm}] {macro.Name} - Dmg: {dmgResult.NormalizedExpression} = {dmgResult.Total}");
+        }
+        else
+        {
+            StatusMessage = $"Macro '{macro.Name}' expressions could not be parsed.";
+        }
+
+        // Trim history
+        while (RollHistory.Count > 50)
+        {
+            RollHistory.RemoveAt(RollHistory.Count - 1);
+        }
+    }
+
+    private void ExecuteClearHistory()
+    {
+        RollHistory.Clear();
+        StatusMessage = "History cleared.";
+    }
+
+    private void ExecuteCopyText(string? text)
+    {
+        if (!string.IsNullOrWhiteSpace(text))
+        {
+            try
+            {
+                Clipboard.SetText(text);
+                StatusMessage = "Copied to clipboard.";
+            }
+            catch
+            {
+                StatusMessage = "Unable to copy to clipboard.";
+            }
+        }
+    }
+
+    private void ExecuteToggleHistoryCollapsed()
+    {
+        IsHistoryCollapsed = !IsHistoryCollapsed;
+    }
+
+    private string ComposeLastResultText()
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(TotalText)) parts.Add(TotalText);
+        if (!string.IsNullOrWhiteSpace(RollsText)) parts.Add(RollsText);
+        if (!string.IsNullOrWhiteSpace(AdvantageText)) parts.Add(AdvantageText);
+        return string.Join("\n", parts);
+    }
+
+    private string GetMacrosPath()
+    {
+        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DnDDice");
+        Directory.CreateDirectory(folder);
+        return Path.Combine(folder, "macros.json");
+    }
+
+    private void LoadMacros()
+    {
+        var path = GetMacrosPath();
+        try
+        {
+            if (File.Exists(path))
+            {
+                var json = File.ReadAllText(path);
+                var loaded = JsonSerializer.Deserialize<List<Macro>>(json) ?? new List<Macro>();
+                Macros.Clear();
+                foreach (var m in loaded)
+                {
+                    if (!string.IsNullOrWhiteSpace(m.Name))
+                    {
+                        Macros.Add(m);
+                    }
+                }
+            }
+        }
+        catch
+        {
+            // If the file is corrupted, move it aside so the app can start
+            try
+            {
+                var badPath = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, "macros.bad.json");
+                if (File.Exists(path))
+                {
+                    File.Move(path, badPath, true);
+                }
+            }
+            catch { /* ignore */ }
+            Macros.Clear();
+        }
+    }
+
+    private void SaveMacros()
+    {
+        try
+        {
+            var path = GetMacrosPath();
+            var json = JsonSerializer.Serialize(Macros.ToList(), new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(path, json);
+        }
+        catch
+        {
+            // Ignore save errors
+        }
+    }
+
+    private void ExecuteSaveMacro()
+    {
+        if (string.IsNullOrWhiteSpace(MacroName) || string.IsNullOrWhiteSpace(MacroHitExpression) || string.IsNullOrWhiteSpace(MacroDamageExpression))
+        {
+            StatusMessage = "Macro requires name, hit, and damage expressions.";
+            return;
+        }
+
+        // Update if exists
+        var existing = Macros.FirstOrDefault(m => string.Equals(m.Name, MacroName, StringComparison.OrdinalIgnoreCase));
+        if (existing is not null)
+        {
+            existing.HitExpression = MacroHitExpression;
+            existing.DamageExpression = MacroDamageExpression;
+        }
+        else
+        {
+            Macros.Add(new Macro
+            {
+                Name = MacroName,
+                HitExpression = MacroHitExpression,
+                DamageExpression = MacroDamageExpression,
+            });
+        }
+
+        SaveMacros();
+        StatusMessage = $"Saved macro '{MacroName}'.";
+    }
+
+    private void ExecuteDeleteMacro()
+    {
+        if (SelectedMacro is null)
+        {
+            StatusMessage = "Select a macro to delete.";
+            return;
+        }
+
+        var removed = Macros.Remove(SelectedMacro);
+        if (removed)
+        {
+            SaveMacros();
+            StatusMessage = $"Deleted macro '{SelectedMacro.Name}'.";
+            MacroName = MacroHitExpression = MacroDamageExpression = string.Empty;
+            SelectedMacro = null;
+        }
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

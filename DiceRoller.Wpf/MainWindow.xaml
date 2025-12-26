@@ -89,6 +89,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Dice Type Section -->
@@ -219,12 +220,104 @@
         </Button>
 
         <!-- Results Section -->
-        <StackPanel Grid.Row="5" Orientation="Vertical" Margin="0,16,0,0">
-            <TextBlock Text="Result" FontSize="14" FontWeight="Bold" />
-            <TextBlock Text="{Binding TotalText}" />
-            <TextBlock Text="{Binding RollsText}" TextWrapping="Wrap" />
-            <TextBlock Text="{Binding AdvantageText}" TextWrapping="Wrap" />
-            <TextBlock Text="{Binding StatusMessage}" Foreground="DarkRed" />
+        <Grid Grid.Row="5" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="180" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Vertical">
+                <TextBlock Text="Result" FontSize="14" FontWeight="Bold" />
+                <DockPanel>
+                    <TextBlock Text="{Binding TotalText}" />
+                    <Button DockPanel.Dock="Right" Content="Copy" Width="50" Margin="8,0,0,0"
+                            Command="{Binding CopyTextCommand}"
+                            CommandParameter="{Binding DataContext.ComposeLastResultText(), RelativeSource={RelativeSource AncestorType=Window}}" />
+                </DockPanel>
+                <TextBlock Text="{Binding RollsText}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding AdvantageText}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding StatusMessage}" Foreground="DarkRed" />
+            </StackPanel>
+
+            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" />
+
+            <StackPanel Grid.Column="2" Orientation="Vertical">
+                <DockPanel>
+                    <TextBlock Text="History" FontSize="14" FontWeight="Bold" Margin="0,0,0,4" />
+                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                        <Button Content="Clear" Width="60" Margin="6,0,0,0" Command="{Binding ClearHistoryCommand}" />
+                        <Button Content="Toggle" Width="60" Margin="6,0,0,0" Command="{Binding ToggleHistoryCollapsedCommand}" />
+                    </StackPanel>
+                </DockPanel>
+                <Border BorderBrush="#CCC" BorderThickness="1" CornerRadius="4" Background="#F9F9F9" Margin="0,6,0,0">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.IsHistoryCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <!-- Fixed height ~8 rows; keeps layout independent of history length -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Height="160">
+                        <ItemsControl ItemsSource="{Binding RollHistory}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding}" Margin="4,2" FontSize="11"
+                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Cursor="Hand">
+                                        <TextBlock.InputBindings>
+                                            <MouseBinding MouseAction="LeftClick"
+                                                          Command="{Binding DataContext.CopyTextCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                          CommandParameter="{Binding}" />
+                                        </TextBlock.InputBindings>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- Macros Section -->
+        <StackPanel Grid.Row="6" Margin="0,12,0,0">
+            <TextBlock Text="Macros" FontSize="14" FontWeight="Bold" />
+            <DockPanel Margin="0,6,0,0">
+                <!-- Editor -->
+                <StackPanel DockPanel.Dock="Right" Width="220">
+                    <TextBlock Text="Name" FontWeight="Bold"/>
+                    <TextBox Text="{Binding MacroName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6"/>
+                    <TextBlock Text="Hit (e.g., 1d20+4)" FontWeight="Bold"/>
+                    <TextBox Text="{Binding MacroHitExpression, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6"/>
+                    <TextBlock Text="Damage (e.g., 1d6+2)" FontWeight="Bold"/>
+                    <TextBox Text="{Binding MacroDamageExpression, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Save" Command="{Binding SaveMacroCommand}" Width="70" Margin="0,0,6,0" />
+                        <Button Content="Delete" Command="{Binding DeleteMacroCommand}" Width="70" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Macro buttons list -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="120">
+                    <ItemsControl ItemsSource="{Binding Macros}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Name}" Margin="4,4,4,4" Padding="12,8"
+                                        Command="{Binding DataContext.ExecuteMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
         </StackPanel>
     </Grid>
 </Window>
