@@ -3,30 +3,223 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:models="clr-namespace:DiceEngine.Models;assembly=DiceEngine"
+        xmlns:converters="clr-namespace:DiceRoller.Wpf.Converters"
         mc:Ignorable="d"
-        Title="DnD Dice Roller" Height="320" Width="420">
+        Title="DnD Dice Roller" Height="500" Width="480">
+    <Window.Resources>
+        <converters:EqualityConverter x:Key="EqualityConverter" />
+        <converters:EnumEqualityConverter x:Key="EnumEqualityConverter" />
+        <converters:IntegerEqualityConverter x:Key="IntegerEqualityConverter" />
+        
+        <Style x:Key="DiceButtonStyle" TargetType="RadioButton">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="#333"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="12,8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Background" Value="#E0E0E0" />
+            <Setter Property="Foreground" Value="Black" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Margin" Value="4,2" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Background" Value="#4A90E2" />
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="FontWeight" Value="Bold" />
+                </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#D0D0D0" />
+                </Trigger>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsChecked" Value="True" />
+                        <Condition Property="IsMouseOver" Value="True" />
+                    </MultiTrigger.Conditions>
+                    <Setter Property="Background" Value="#3A80D2" />
+                </MultiTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SelectionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="#E0E0E0" />
+            <Setter Property="Foreground" Value="Black" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Margin" Value="4,2" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="BorderBrush" Value="#333" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#D0D0D0" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    
     <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-        </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="Enter dice expression (e.g., 1d20+5):" FontWeight="Bold" />
-        <TextBox Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding ExpressionText, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0" />
+        <!-- Dice Type Section -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="Dice Type:" FontWeight="Bold" Margin="0,0,0,6" />
+            <WrapPanel>
+                <RadioButton Content="d4" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d4}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d4" />
+                <RadioButton Content="d6" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d6}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d6" />
+                <RadioButton Content="d8" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d8}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d8" />
+                <RadioButton Content="d12" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d12}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d12" />
+                <RadioButton Content="d20" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d20}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d20" />
+                <RadioButton Content="d100" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d100}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d100" />
+            </WrapPanel>
+        </StackPanel>
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="Roll mode:" VerticalAlignment="Center" Margin="0,6,0,0" />
-        <ComboBox Grid.Row="2" Grid.Column="1" ItemsSource="{Binding RollModes}" SelectedItem="{Binding SelectedRollMode}" Width="140" Margin="0,6,0,0" />
+        <!-- Quantity Section -->
+        <StackPanel Grid.Row="1" Margin="0,0,0,12">
+            <TextBlock Text="Quantity:" FontWeight="Bold" Margin="0,0,0,6" />
+            <DockPanel>
+                <ComboBox DockPanel.Dock="Right" Width="60" Margin="8,0,0,0"
+                          ItemsSource="{Binding QuantityDropdownOptions}"
+                          SelectedItem="{Binding SelectedQuantityDropdown}" />
+                <WrapPanel>
+                    <RadioButton Content="1" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=1}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="1" />
+                    <RadioButton Content="2" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=2}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="2" />
+                    <RadioButton Content="3" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=3}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="3" />
+                    <RadioButton Content="4" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=4}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="4" />
+                    <RadioButton Content="5" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=5}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="5" />
+                </WrapPanel>
+            </DockPanel>
+        </StackPanel>
 
-        <Button Grid.Row="3" Grid.ColumnSpan="2" Content="Roll" Command="{Binding RollCommand}" Height="32" Margin="0,10,0,0" />
+        <!-- Modifier Section -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,12">
+            <TextBlock Text="Modifier:" FontWeight="Bold" Margin="0,0,0,6" />
+            <DockPanel>
+                <ComboBox DockPanel.Dock="Right" Width="60" Margin="8,0,0,0"
+                          ItemsSource="{Binding ModifierDropdownOptions}"
+                          SelectedItem="{Binding SelectedModifierDropdown}" />
+                <WrapPanel>
+                    <RadioButton Content="-2" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=-2}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="-2" />
+                    <RadioButton Content="-1" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=-1}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="-1" />
+                    <RadioButton Content="0" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=0}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="0" />
+                    <RadioButton Content="+1" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=1}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="1" />
+                    <RadioButton Content="+2" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=2}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="2" />
+                    <RadioButton Content="+3" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=3}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="3" />
+                    <RadioButton Content="+4" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=4}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="4" />
+                    <RadioButton Content="+5" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=5}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="5" />
+                </WrapPanel>
+            </DockPanel>
+        </StackPanel>
 
-        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Vertical" Margin="0,10,0,0" >
+        <!-- Roll Mode Section -->
+        <StackPanel Grid.Row="3" Margin="0,0,0,12">
+            <TextBlock Text="Roll Mode:" FontWeight="Bold" Margin="0,0,0,6" />
+            <WrapPanel>
+                <RadioButton Content="Normal" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Normal}}" />
+                <RadioButton Content="Advantage" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Advantage}}" />
+                <RadioButton Content="Disadvantage" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Disadvantage}}" />
+            </WrapPanel>
+        </StackPanel>
+
+        <!-- Roll Button -->
+        <Button Grid.Row="4" Content="Roll" Command="{Binding RollCommand}" 
+                Height="40" FontSize="16" FontWeight="Bold" Margin="0,4,0,0"
+                Background="#4CAF50" Foreground="White" BorderThickness="0" Cursor="Hand">
+            <Button.Style>
+                <Style TargetType="Button">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}"
+                                        CornerRadius="6"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#45A049" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Style>
+        </Button>
+
+        <!-- Results Section -->
+        <StackPanel Grid.Row="5" Orientation="Vertical" Margin="0,16,0,0">
             <TextBlock Text="Result" FontSize="14" FontWeight="Bold" />
             <TextBlock Text="{Binding TotalText}" />
             <TextBlock Text="{Binding RollsText}" TextWrapping="Wrap" />
