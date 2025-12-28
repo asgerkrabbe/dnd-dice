@@ -7,6 +7,10 @@
         xmlns:converters="clr-namespace:DiceRoller.Wpf.Converters"
         mc:Ignorable="d"
         Title="DnD Dice Roller" Height="500" Width="480">
+    <Window.InputBindings>
+        <KeyBinding Command="{Binding OpenMacroEditorCommand}" Key="M" Modifiers="Control" />
+        <KeyBinding Command="{Binding ToggleMacroReorderButtonsCommand}" Key="R" Modifiers="Control" />
+    </Window.InputBindings>
     <Window.Resources>
         <converters:EqualityConverter x:Key="EqualityConverter" />
         <converters:EnumEqualityConverter x:Key="EnumEqualityConverter" />
@@ -81,7 +85,35 @@
         </Style>
     </Window.Resources>
     
-    <Grid Margin="16">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Import Macros" Command="{Binding ImportMacrosCommand}" />
+                <MenuItem Header="_Export Macros" Command="{Binding ExportMacrosCommand}" />
+                <Separator />
+                <MenuItem Header="E_xit" Command="{Binding ExitCommand}" />
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Toggle _History" Command="{Binding ToggleHistoryCollapsedCommand}" />
+                <MenuItem Header="Toggle Macro _Edit Buttons" Command="{Binding ToggleMacroEditButtonsCommand}" />
+                <MenuItem Header="Toggle Macro _Delete Buttons" Command="{Binding ToggleMacroDeleteButtonsCommand}" />
+                <MenuItem Header="Toggle Macro _Reorder Buttons" Command="{Binding ToggleMacroReorderButtonsCommand}" InputGestureText="Ctrl+R" />
+            </MenuItem>
+            <MenuItem Header="_Macro">
+                <MenuItem Header="_Open Macro Editor" Command="{Binding OpenMacroEditorCommand}" InputGestureText="Ctrl+M" />
+                <MenuItem Header="_Save Macro" Command="{Binding SaveMacroCommand}" />
+                <MenuItem Header="_Clear Macro Fields" Command="{Binding ClearMacroFieldsCommand}" />
+                <MenuItem Header="_Delete Macro" Command="{Binding DeleteMacroCommand}" IsEnabled="{Binding CanDeleteMacro}" />
+                <Separator />
+                <MenuItem Header="_Import Macros" Command="{Binding ImportMacrosCommand}" />
+                <MenuItem Header="E_xport Macros" Command="{Binding ExportMacrosCommand}" />
+                <Separator />
+                <MenuItem Header="Toggle Macro _Edit Buttons" Command="{Binding ToggleMacroEditButtonsCommand}" />
+                <MenuItem Header="Toggle Macro _Delete Buttons" Command="{Binding ToggleMacroDeleteButtonsCommand}" />
+            </MenuItem>
+        </Menu>
+
+        <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -277,8 +309,8 @@
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-                    <!-- Fixed height ~8 rows; keeps layout independent of history length -->
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Height="160">
+                    <!-- Fixed height ~5 rows; keeps layout independent of history length -->
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Height="100">
                         <ItemsControl ItemsSource="{Binding RollHistory}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -302,45 +334,10 @@
         <StackPanel Grid.Row="6" Margin="0,12,0,0">
             <DockPanel>
                 <TextBlock Text="Macros" FontSize="14" FontWeight="Bold" />
-                <Button Content="Toggle Edit Buttons" DockPanel.Dock="Right" Width="130" Margin="6,0,0,0"
-                        Command="{Binding ToggleMacroEditButtonsCommand}"
-                        ToolTip="Show or hide per-item Edit buttons" />
-                <Button Content="Toggle Delete Buttons" DockPanel.Dock="Right" Width="140" Margin="6,0,0,0"
-                        Command="{Binding ToggleMacroDeleteButtonsCommand}"
-                        ToolTip="Show or hide per-item Delete buttons" />
             </DockPanel>
             <DockPanel Margin="0,6,0,0">
-                <!-- Editor -->
-                <StackPanel DockPanel.Dock="Right" Width="220">
-                    <TextBlock Text="Name" FontWeight="Bold"/>
-                    <TextBox Text="{Binding MacroName, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6"/>
-                    <TextBlock Text="Hit (e.g., 1d20+4)" FontWeight="Bold"/>
-                    <TextBox Text="{Binding MacroHitExpression, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,6"/>
-                    <TextBlock Text="Damage (e.g., 1d6+2)" FontWeight="Bold"/>
-                    <TextBox Text="{Binding MacroDamageExpression, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Save" Command="{Binding SaveMacroCommand}" Width="70" Margin="0,0,6,0"
-                                ToolTip="Save new macro or update existing" />
-                        <Button Content="Clear" Command="{Binding ClearMacroFieldsCommand}" Width="70" Margin="0,0,6,0"
-                                ToolTip="Clear all macro editor fields" />
-                        <Button Content="Delete" Command="{Binding DeleteMacroCommand}" Width="70"
-                            IsEnabled="{Binding CanDeleteMacro}">
-                            <Button.Style>
-                                <Style TargetType="Button">
-                                    <Setter Property="ToolTip" Value="Delete selected or named macro" />
-                                    <Style.Triggers>
-                                        <Trigger Property="IsEnabled" Value="False">
-                                            <Setter Property="ToolTip" Value="Select a macro or enter a name to delete" />
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Button.Style>
-                        </Button>
-                    </StackPanel>
-                </StackPanel>
-
                 <!-- Macro buttons list -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="120">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="180">
                     <ItemsControl ItemsSource="{Binding Macros}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -349,20 +346,37 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="4,4,4,4">
-                                    <Button Content="{Binding Name}" Padding="12,8" Margin="0,0,6,0"
-                                            Command="{Binding DataContext.ExecuteMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"
-                                            ToolTip="Execute this macro (Hit + Damage rolls)" />
-                                    <Button Content="Edit" Padding="8,8" Margin="0,0,6,0" ToolTip="Load this macro into the editor for modification"
-                                            Command="{Binding DataContext.EditMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"
-                                            Visibility="{Binding DataContext.ShowMacroEditButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
-                                        <Button Content="Delete" Padding="8,8" ToolTip="Delete this macro"
-                                            Command="{Binding DataContext.DeleteMacroItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                            CommandParameter="{Binding}"
-                                            Visibility="{Binding DataContext.ShowMacroDeleteButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
-                                </StackPanel>
+                                <Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Padding="4" Margin="4">
+                                    <StackPanel Orientation="Vertical" Width="200">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                            <Button Content="{Binding Name}" Padding="6,4" Margin="0,0,4,0"
+                                                    Command="{Binding DataContext.ExecuteMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    ToolTip="Execute this macro (Hit + Damage rolls)" />
+                                            <StackPanel Orientation="Vertical" Margin="0,0,0,0">
+                                                <Button Content="Edit" Padding="6,4" Margin="0,0,0,2" ToolTip="Load this macro into the editor for modification"
+                                                        Command="{Binding DataContext.EditMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding DataContext.ShowMacroEditButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                                                <Button Content="Delete" Padding="6,4" ToolTip="Delete this macro"
+                                                        Command="{Binding DataContext.DeleteMacroItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}"
+                                                        Visibility="{Binding DataContext.ShowMacroDeleteButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                                            </StackPanel>
+                                                <StackPanel Orientation="Vertical" Margin="4,0,0,0"
+                                                        Visibility="{Binding DataContext.ShowMacroReorderButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                                                <Button Content="↑" Width="26" Padding="2" ToolTip="Move macro up"
+                                                        Command="{Binding DataContext.MoveMacroUpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Content="↓" Width="26" Padding="2" Margin="0,2,0,0" ToolTip="Move macro down"
+                                                        Command="{Binding DataContext.MoveMacroDownCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Category}" FontWeight="Bold" Foreground="DarkSlateGray" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
+                                        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Foreground="#444" Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
@@ -370,4 +384,5 @@
             </DockPanel>
         </StackPanel>
     </Grid>
+    </DockPanel>
 </Window>

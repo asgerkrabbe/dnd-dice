@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using System.Windows;
+using Microsoft.Win32;
 using DiceEngine.Models;
 using DiceEngine.Parsing;
 using DiceEngine.Rolling;
@@ -32,6 +33,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _isHistoryCollapsed = false;
     private bool _showMacroDeleteButtons = false;
     private bool _showMacroEditButtons = false;
+    private bool _showMacroReorderButtons = false;
+    private string _macroCategory = string.Empty;
+    private string _macroDescription = string.Empty;
 
     public MainViewModel(DiceParser parser, DiceEngine.Rolling.DiceRoller roller)
     {
@@ -54,6 +58,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ToggleMacroEditButtonsCommand = new RelayCommand(ExecuteToggleMacroEditButtons);
         EditMacroCommand = new RelayCommand<Macro>(ExecuteEditMacro);
         ClearMacroFieldsCommand = new RelayCommand(ExecuteClearMacroFields);
+        MoveMacroUpCommand = new RelayCommand<Macro>(ExecuteMoveMacroUp);
+        MoveMacroDownCommand = new RelayCommand<Macro>(ExecuteMoveMacroDown);
+        ImportMacrosCommand = new RelayCommand(ExecuteImportMacros);
+        ExportMacrosCommand = new RelayCommand(ExecuteExportMacros);
+        ExitCommand = new RelayCommand(ExecuteExit);
+        ToggleMacroReorderButtonsCommand = new RelayCommand(ExecuteToggleMacroReorderButtons);
+        OpenMacroEditorCommand = new RelayCommand(ExecuteOpenMacroEditor);
 
         // Keep CanDeleteMacro accurate when the macro list changes
         Macros.CollectionChanged += (_, __) => OnPropertyChanged(nameof(CanDeleteMacro));
@@ -78,6 +89,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand ToggleMacroEditButtonsCommand { get; }
     public ICommand EditMacroCommand { get; }
     public ICommand ClearMacroFieldsCommand { get; }
+    public ICommand MoveMacroUpCommand { get; }
+    public ICommand MoveMacroDownCommand { get; }
+    public ICommand ImportMacrosCommand { get; }
+    public ICommand ExportMacrosCommand { get; }
+    public ICommand ExitCommand { get; }
+    public ICommand ToggleMacroReorderButtonsCommand { get; }
+    public ICommand OpenMacroEditorCommand { get; }
 
     public ObservableCollection<string> RollHistory { get; }
     public ObservableCollection<Macro> Macros { get; }
@@ -206,6 +224,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _showMacroEditButtons, value);
     }
 
+    public bool ShowMacroReorderButtons
+    {
+        get => _showMacroReorderButtons;
+        set => SetField(ref _showMacroReorderButtons, value);
+    }
+
     public bool CanDeleteMacro =>
         SelectedMacro is not null ||
         (!string.IsNullOrWhiteSpace(MacroName) && Macros.Any(m => string.Equals(m.Name, MacroName, StringComparison.OrdinalIgnoreCase)));
@@ -240,6 +264,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _macroDamageExpression, value);
     }
 
+    public string MacroCategory
+    {
+        get => _macroCategory;
+        set => SetField(ref _macroCategory, value);
+    }
+
+    public string MacroDescription
+    {
+        get => _macroDescription;
+        set => SetField(ref _macroDescription, value);
+    }
+
     public Macro? SelectedMacro
     {
         get => _selectedMacro;
@@ -253,6 +289,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     MacroName = value.Name;
                     MacroHitExpression = value.HitExpression;
                     MacroDamageExpression = value.DamageExpression;
+                    MacroCategory = value.Category;
+                    MacroDescription = value.Description;
                 }
                 OnPropertyChanged(nameof(CanDeleteMacro));
             }
@@ -531,6 +569,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             existing.HitExpression = MacroHitExpression;
             existing.DamageExpression = MacroDamageExpression;
+            existing.Category = MacroCategory;
+            existing.Description = MacroDescription;
         }
         else
         {
@@ -539,6 +579,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 Name = MacroName,
                 HitExpression = MacroHitExpression,
                 DamageExpression = MacroDamageExpression,
+                Category = MacroCategory,
+                Description = MacroDescription,
             });
         }
 
@@ -573,6 +615,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
             SaveMacros();
             StatusMessage = $"Deleted macro '{target.Name}'.";
             MacroName = MacroHitExpression = MacroDamageExpression = string.Empty;
+            MacroCategory = MacroDescription = string.Empty;
             SelectedMacro = null;
             OnPropertyChanged(nameof(CanDeleteMacro));
         }
@@ -605,12 +648,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ShowMacroEditButtons = !ShowMacroEditButtons;
     }
 
+    private void ExecuteToggleMacroReorderButtons()
+    {
+        ShowMacroReorderButtons = !ShowMacroReorderButtons;
+    }
+
     private void ExecuteEditMacro(Macro? macro)
     {
         if (macro is not null)
         {
             SelectedMacro = macro; // This populates the editor fields automatically
             StatusMessage = $"Editing macro: {macro.Name}";
+            ExecuteOpenMacroEditor();
         }
     }
 
@@ -619,8 +668,150 @@ public sealed class MainViewModel : INotifyPropertyChanged
         MacroName = string.Empty;
         MacroHitExpression = string.Empty;
         MacroDamageExpression = string.Empty;
+        MacroCategory = string.Empty;
+        MacroDescription = string.Empty;
         SelectedMacro = null;
         StatusMessage = "Macro fields cleared.";
+    }
+
+    private void ExecuteMoveMacroUp(Macro? macro)
+    {
+        MoveMacro(macro, -1);
+    }
+
+    private void ExecuteMoveMacroDown(Macro? macro)
+    {
+        MoveMacro(macro, 1);
+    }
+
+    private void MoveMacro(Macro? macro, int delta)
+    {
+        if (macro is null)
+        {
+            return;
+        }
+
+        var index = Macros.IndexOf(macro);
+        if (index < 0)
+        {
+            return;
+        }
+
+        var newIndex = index + delta;
+        if (newIndex < 0 || newIndex >= Macros.Count)
+        {
+            return;
+        }
+
+        Macros.Move(index, newIndex);
+        SaveMacros();
+        StatusMessage = $"Moved macro '{macro.Name}' {(delta < 0 ? "up" : "down")}.";
+    }
+
+    private void ExecuteImportMacros()
+    {
+        var dialog = new OpenFileDialog
+        {
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            Title = "Import Macros",
+            CheckFileExists = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var json = File.ReadAllText(dialog.FileName);
+            var loaded = JsonSerializer.Deserialize<List<Macro>>(json) ?? new List<Macro>();
+            int added = 0, updated = 0;
+            foreach (var m in loaded.Where(m => !string.IsNullOrWhiteSpace(m.Name)))
+            {
+                var existing = Macros.FirstOrDefault(x => string.Equals(x.Name, m.Name, StringComparison.OrdinalIgnoreCase));
+                if (existing is not null)
+                {
+                    existing.HitExpression = m.HitExpression;
+                    existing.DamageExpression = m.DamageExpression;
+                    existing.Category = m.Category;
+                    existing.Description = m.Description;
+                    updated++;
+                }
+                else
+                {
+                    Macros.Add(new Macro
+                    {
+                        Name = m.Name,
+                        HitExpression = m.HitExpression,
+                        DamageExpression = m.DamageExpression,
+                        Category = m.Category,
+                        Description = m.Description,
+                    });
+                    added++;
+                }
+            }
+
+            SaveMacros();
+            StatusMessage = $"Imported {added} new, updated {updated} macros.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Failed to import macros.";
+            LogToFile($"Error importing macros: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    private void ExecuteExportMacros()
+    {
+        var dialog = new SaveFileDialog
+        {
+            Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+            Title = "Export Macros",
+            FileName = "macros_export.json",
+            OverwritePrompt = true
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var json = JsonSerializer.Serialize(Macros.ToList(), new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(dialog.FileName, json);
+            StatusMessage = $"Exported {Macros.Count} macros to {dialog.FileName}.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Failed to export macros.";
+            LogToFile($"Error exporting macros: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    private void ExecuteExit()
+    {
+        Application.Current?.Shutdown();
+    }
+
+    private void ExecuteOpenMacroEditor()
+    {
+        try
+        {
+            var owner = Application.Current?.MainWindow;
+            var editor = new DiceRoller.Wpf.MacroEditorWindow
+            {
+                Owner = owner,
+                DataContext = this
+            };
+            editor.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Unable to open macro editor.";
+            LogToFile($"Error opening macro editor: {ex.GetType().Name}: {ex.Message}");
+        }
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
