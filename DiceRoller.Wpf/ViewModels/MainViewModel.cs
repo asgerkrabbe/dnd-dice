@@ -12,7 +12,6 @@ using DiceEngine.Models;
 using DiceEngine.Parsing;
 using DiceEngine.Rolling;
 using DiceRoller.Wpf.Commands;
-using DiceRoller.Wpf.Models;
 
 namespace DiceRoller.Wpf.ViewModels;
 
@@ -435,10 +434,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
                         Macros.Add(m);
                     }
                 }
+                LogToFile($"Successfully loaded {loaded.Count} macros from {path}");
             }
         }
-        catch
+        catch (Exception ex)
         {
+            LogToFile($"Error loading macros: {ex.GetType().Name}: {ex.Message}");
             // If the file is corrupted, move it aside so the app can start
             try
             {
@@ -446,9 +447,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 if (File.Exists(path))
                 {
                     File.Move(path, badPath, true);
+                    LogToFile($"Moved corrupted macro file to {badPath}");
                 }
             }
-            catch { /* ignore */ }
+            catch (Exception moveEx) 
+            { 
+                LogToFile($"Failed to move corrupted macro file: {moveEx.Message}");
+            }
             Macros.Clear();
         }
     }
@@ -460,10 +465,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var path = GetMacrosPath();
             var json = JsonSerializer.Serialize(Macros.ToList(), new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(path, json);
+            LogToFile($"Successfully saved {Macros.Count} macros to {path}");
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore save errors
+            LogToFile($"Error saving macros: {ex.GetType().Name}: {ex.Message}\nStackTrace: {ex.StackTrace}");
         }
     }
 
@@ -529,5 +535,31 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private static void LogToFile(string message)
+    {
+        try
+        {
+            var logPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "DnDDice",
+                "macro_operations.log");
+
+            var logDir = Path.GetDirectoryName(logPath);
+            if (!string.IsNullOrEmpty(logDir) && !Directory.Exists(logDir))
+            {
+                Directory.CreateDirectory(logDir);
+            }
+
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+            var logEntry = $"[{timestamp}] {message}{Environment.NewLine}";
+            File.AppendAllText(logPath, logEntry);
+        }
+        catch
+        {
+            // Silently fail to avoid cascading errors
+            System.Diagnostics.Debug.WriteLine($"Failed to log macro operation: {message}");
+        }
     }
 }
