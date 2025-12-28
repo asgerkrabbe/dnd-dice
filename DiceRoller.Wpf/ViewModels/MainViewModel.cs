@@ -30,6 +30,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private string _advantageText = string.Empty;
     private string _statusMessage = string.Empty;
     private bool _isHistoryCollapsed = false;
+    private bool _showMacroDeleteButtons = false;
+    private bool _showMacroEditButtons = false;
 
     public MainViewModel(DiceParser parser, DiceEngine.Rolling.DiceRoller roller)
     {
@@ -47,6 +49,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ClearHistoryCommand = new RelayCommand(ExecuteClearHistory);
         CopyTextCommand = new RelayCommand<string>(ExecuteCopyText);
         ToggleHistoryCollapsedCommand = new RelayCommand(ExecuteToggleHistoryCollapsed);
+        ToggleMacroDeleteButtonsCommand = new RelayCommand(ExecuteToggleMacroDeleteButtons);
+        DeleteMacroItemCommand = new RelayCommand<Macro>(ExecuteDeleteMacroItem);
+        ToggleMacroEditButtonsCommand = new RelayCommand(ExecuteToggleMacroEditButtons);
+        EditMacroCommand = new RelayCommand<Macro>(ExecuteEditMacro);
+        ClearMacroFieldsCommand = new RelayCommand(ExecuteClearMacroFields);
+
+        // Keep CanDeleteMacro accurate when the macro list changes
+        Macros.CollectionChanged += (_, __) => OnPropertyChanged(nameof(CanDeleteMacro));
 
         LoadMacros();
     }
@@ -63,6 +73,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand ClearHistoryCommand { get; }
     public ICommand CopyTextCommand { get; }
     public ICommand ToggleHistoryCollapsedCommand { get; }
+    public ICommand ToggleMacroDeleteButtonsCommand { get; }
+    public ICommand DeleteMacroItemCommand { get; }
+    public ICommand ToggleMacroEditButtonsCommand { get; }
+    public ICommand EditMacroCommand { get; }
+    public ICommand ClearMacroFieldsCommand { get; }
 
     public ObservableCollection<string> RollHistory { get; }
     public ObservableCollection<Macro> Macros { get; }
@@ -179,6 +194,22 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set => SetField(ref _isHistoryCollapsed, value);
     }
 
+    public bool ShowMacroDeleteButtons
+    {
+        get => _showMacroDeleteButtons;
+        set => SetField(ref _showMacroDeleteButtons, value);
+    }
+
+    public bool ShowMacroEditButtons
+    {
+        get => _showMacroEditButtons;
+        set => SetField(ref _showMacroEditButtons, value);
+    }
+
+    public bool CanDeleteMacro =>
+        SelectedMacro is not null ||
+        (!string.IsNullOrWhiteSpace(MacroName) && Macros.Any(m => string.Equals(m.Name, MacroName, StringComparison.OrdinalIgnoreCase)));
+
     // Macro editing fields
     private string _macroName = string.Empty;
     private string _macroHitExpression = string.Empty;
@@ -188,7 +219,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public string MacroName
     {
         get => _macroName;
-        set => SetField(ref _macroName, value);
+        set
+        {
+            if (SetField(ref _macroName, value))
+            {
+                OnPropertyChanged(nameof(CanDeleteMacro));
+            }
+        }
     }
 
     public string MacroHitExpression
@@ -217,6 +254,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                     MacroHitExpression = value.HitExpression;
                     MacroDamageExpression = value.DamageExpression;
                 }
+                OnPropertyChanged(nameof(CanDeleteMacro));
             }
         }
     }
@@ -401,6 +439,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
         IsHistoryCollapsed = !IsHistoryCollapsed;
     }
 
+    private void ExecuteToggleMacroDeleteButtons()
+    {
+        ShowMacroDeleteButtons = !ShowMacroDeleteButtons;
+        StatusMessage = ShowMacroDeleteButtons ? "Macro delete buttons shown." : "Macro delete buttons hidden.";
+    }
+
     private string ComposeLastResultText()
     {
         var parts = new List<string>();
@@ -504,20 +548,79 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void ExecuteDeleteMacro()
     {
-        if (SelectedMacro is null)
+        // Prefer deleting current selection; otherwise delete by MacroName
+        Macro? target = SelectedMacro;
+        if (target is null && !string.IsNullOrWhiteSpace(MacroName))
         {
-            StatusMessage = "Select a macro to delete.";
+            target = Macros.FirstOrDefault(m => string.Equals(m.Name, MacroName, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (target is null)
+        {
+            StatusMessage = "Select a macro or enter a macro name to delete.";
             return;
         }
 
-        var removed = Macros.Remove(SelectedMacro);
+        var confirm = MessageBox.Show($"Delete macro '{target.Name}'?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        var removed = Macros.Remove(target);
         if (removed)
         {
             SaveMacros();
-            StatusMessage = $"Deleted macro '{SelectedMacro.Name}'.";
+            StatusMessage = $"Deleted macro '{target.Name}'.";
             MacroName = MacroHitExpression = MacroDamageExpression = string.Empty;
             SelectedMacro = null;
+            OnPropertyChanged(nameof(CanDeleteMacro));
         }
+    }
+
+    private void ExecuteDeleteMacroItem(Macro? macro)
+    {
+        if (macro is null)
+        {
+            return;
+        }
+
+        var confirm = MessageBox.Show($"Delete macro '{macro.Name}'?", "Confirm Delete", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        var removed = Macros.Remove(macro);
+        if (removed)
+        {
+            SaveMacros();
+            StatusMessage = $"Deleted macro '{macro.Name}'.";
+            OnPropertyChanged(nameof(CanDeleteMacro));
+        }
+    }
+
+    private void ExecuteToggleMacroEditButtons()
+    {
+        ShowMacroEditButtons = !ShowMacroEditButtons;
+    }
+
+    private void ExecuteEditMacro(Macro? macro)
+    {
+        if (macro is not null)
+        {
+            SelectedMacro = macro; // This populates the editor fields automatically
+            StatusMessage = $"Editing macro: {macro.Name}";
+        }
+    }
+
+    private void ExecuteClearMacroFields()
+    {
+        MacroName = string.Empty;
+        MacroHitExpression = string.Empty;
+        MacroDamageExpression = string.Empty;
+        SelectedMacro = null;
+        StatusMessage = "Macro fields cleared.";
     }
 
     private bool SetField<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)

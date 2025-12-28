@@ -11,6 +11,7 @@
         <converters:EqualityConverter x:Key="EqualityConverter" />
         <converters:EnumEqualityConverter x:Key="EnumEqualityConverter" />
         <converters:IntegerEqualityConverter x:Key="IntegerEqualityConverter" />
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
         
         <Style x:Key="DiceButtonStyle" TargetType="RadioButton">
             <Setter Property="Template">
@@ -98,22 +99,28 @@
             <WrapPanel>
                 <RadioButton Content="d4" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
                              IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d4}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d4" />
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d4"
+                             ToolTip="Roll a 4-sided die" />
                 <RadioButton Content="d6" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
                              IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d6}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d6" />
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d6"
+                             ToolTip="Roll a 6-sided die" />
                 <RadioButton Content="d8" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
                              IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d8}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d8" />
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d8"
+                             ToolTip="Roll an 8-sided die" />
                 <RadioButton Content="d12" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
                              IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d12}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d12" />
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d12"
+                             ToolTip="Roll a 12-sided die" />
                 <RadioButton Content="d20" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
                              IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d20}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d20" />
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d20"
+                             ToolTip="Roll a 20-sided die" />
                 <RadioButton Content="d100" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
                              IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d100}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d100" />
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d100"
+                             ToolTip="Roll a 100-sided die (percentile)" />
             </WrapPanel>
         </StackPanel>
 
@@ -123,7 +130,8 @@
             <DockPanel>
                 <ComboBox DockPanel.Dock="Right" Width="60" Margin="8,0,0,0"
                           ItemsSource="{Binding QuantityDropdownOptions}"
-                          SelectedItem="{Binding SelectedQuantityDropdown}" />
+                          SelectedItem="{Binding SelectedQuantityDropdown}"
+                          ToolTip="Enter custom quantity" />
                 <WrapPanel>
                     <RadioButton Content="1" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
                                  IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=1}"
@@ -150,7 +158,8 @@
             <DockPanel>
                 <ComboBox DockPanel.Dock="Right" Width="60" Margin="8,0,0,0"
                           ItemsSource="{Binding ModifierDropdownOptions}"
-                          SelectedItem="{Binding SelectedModifierDropdown}" />
+                          SelectedItem="{Binding SelectedModifierDropdown}"
+                          ToolTip="Enter custom modifier" />
                 <WrapPanel>
                     <RadioButton Content="-2" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
                                  IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=-2}"
@@ -185,18 +194,22 @@
             <TextBlock Text="Roll Mode:" FontWeight="Bold" Margin="0,0,0,6" />
             <WrapPanel>
                 <RadioButton Content="Normal" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Normal}}" />
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Normal}}"
+                             ToolTip="Roll normally" />
                 <RadioButton Content="Advantage" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Advantage}}" />
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Advantage}}"
+                             ToolTip="Roll twice and take the higher result (d20 only)" />
                 <RadioButton Content="Disadvantage" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Disadvantage}}" />
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Disadvantage}}"
+                             ToolTip="Roll twice and take the lower result (d20 only)" />
             </WrapPanel>
         </StackPanel>
 
         <!-- Roll Button -->
         <Button Grid.Row="4" Content="Roll" Command="{Binding RollCommand}" 
                 Height="40" FontSize="16" FontWeight="Bold" Margin="0,4,0,0"
-                Background="#4CAF50" Foreground="White" BorderThickness="0" Cursor="Hand">
+                Background="#4CAF50" Foreground="White" BorderThickness="0" Cursor="Hand"
+                ToolTip="Roll the dice with current settings">
             <Button.Style>
                 <Style TargetType="Button">
                     <Setter Property="Template">
@@ -233,7 +246,8 @@
                     <TextBlock Text="{Binding TotalText}" />
                     <Button DockPanel.Dock="Right" Content="Copy" Width="50" Margin="8,0,0,0"
                             Command="{Binding CopyTextCommand}"
-                            CommandParameter="{Binding DataContext.ComposeLastResultText(), RelativeSource={RelativeSource AncestorType=Window}}" />
+                            CommandParameter="{Binding DataContext.ComposeLastResultText(), RelativeSource={RelativeSource AncestorType=Window}}"
+                            ToolTip="Copy last result to clipboard" />
                 </DockPanel>
                 <TextBlock Text="{Binding RollsText}" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding AdvantageText}" TextWrapping="Wrap" />
@@ -246,8 +260,10 @@
                 <DockPanel>
                     <TextBlock Text="History" FontSize="14" FontWeight="Bold" Margin="0,0,0,4" />
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                        <Button Content="Clear" Width="60" Margin="6,0,0,0" Command="{Binding ClearHistoryCommand}" />
-                        <Button Content="Toggle" Width="60" Margin="6,0,0,0" Command="{Binding ToggleHistoryCollapsedCommand}" />
+                        <Button Content="Clear" Width="60" Margin="6,0,0,0" Command="{Binding ClearHistoryCommand}"
+                                ToolTip="Clear all roll history" />
+                        <Button Content="Toggle" Width="60" Margin="6,0,0,0" Command="{Binding ToggleHistoryCollapsedCommand}"
+                                ToolTip="Show or hide roll history" />
                     </StackPanel>
                 </DockPanel>
                 <Border BorderBrush="#CCC" BorderThickness="1" CornerRadius="4" Background="#F9F9F9" Margin="0,6,0,0">
@@ -284,7 +300,15 @@
 
         <!-- Macros Section -->
         <StackPanel Grid.Row="6" Margin="0,12,0,0">
-            <TextBlock Text="Macros" FontSize="14" FontWeight="Bold" />
+            <DockPanel>
+                <TextBlock Text="Macros" FontSize="14" FontWeight="Bold" />
+                <Button Content="Toggle Edit Buttons" DockPanel.Dock="Right" Width="130" Margin="6,0,0,0"
+                        Command="{Binding ToggleMacroEditButtonsCommand}"
+                        ToolTip="Show or hide per-item Edit buttons" />
+                <Button Content="Toggle Delete Buttons" DockPanel.Dock="Right" Width="140" Margin="6,0,0,0"
+                        Command="{Binding ToggleMacroDeleteButtonsCommand}"
+                        ToolTip="Show or hide per-item Delete buttons" />
+            </DockPanel>
             <DockPanel Margin="0,6,0,0">
                 <!-- Editor -->
                 <StackPanel DockPanel.Dock="Right" Width="220">
@@ -295,8 +319,23 @@
                     <TextBlock Text="Damage (e.g., 1d6+2)" FontWeight="Bold"/>
                     <TextBox Text="{Binding MacroDamageExpression, UpdateSourceTrigger=PropertyChanged}" Margin="0,2,0,8"/>
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="Save" Command="{Binding SaveMacroCommand}" Width="70" Margin="0,0,6,0" />
-                        <Button Content="Delete" Command="{Binding DeleteMacroCommand}" Width="70" />
+                        <Button Content="Save" Command="{Binding SaveMacroCommand}" Width="70" Margin="0,0,6,0"
+                                ToolTip="Save new macro or update existing" />
+                        <Button Content="Clear" Command="{Binding ClearMacroFieldsCommand}" Width="70" Margin="0,0,6,0"
+                                ToolTip="Clear all macro editor fields" />
+                        <Button Content="Delete" Command="{Binding DeleteMacroCommand}" Width="70"
+                            IsEnabled="{Binding CanDeleteMacro}">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="ToolTip" Value="Delete selected or named macro" />
+                                    <Style.Triggers>
+                                        <Trigger Property="IsEnabled" Value="False">
+                                            <Setter Property="ToolTip" Value="Select a macro or enter a name to delete" />
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
 
@@ -310,9 +349,20 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Button Content="{Binding Name}" Margin="4,4,4,4" Padding="12,8"
-                                        Command="{Binding DataContext.ExecuteMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        CommandParameter="{Binding}" />
+                                <StackPanel Orientation="Horizontal" Margin="4,4,4,4">
+                                    <Button Content="{Binding Name}" Padding="12,8" Margin="0,0,6,0"
+                                            Command="{Binding DataContext.ExecuteMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            ToolTip="Execute this macro (Hit + Damage rolls)" />
+                                    <Button Content="Edit" Padding="8,8" Margin="0,0,6,0" ToolTip="Load this macro into the editor for modification"
+                                            Command="{Binding DataContext.EditMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Visibility="{Binding DataContext.ShowMacroEditButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                                        <Button Content="Delete" Padding="8,8" ToolTip="Delete this macro"
+                                            Command="{Binding DataContext.DeleteMacroItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}"
+                                            Visibility="{Binding DataContext.ShowMacroDeleteButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                                </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
