@@ -1,0 +1,137 @@
+<UserControl x:Class="DiceRoller.Wpf.Controls.DiceSelectionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="clr-namespace:DiceEngine.Models;assembly=DiceEngine"
+             xmlns:converters="clr-namespace:DiceRoller.Wpf.Converters">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/DiceRollerStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:EqualityConverter x:Key="EqualityConverter" />
+            <converters:EnumEqualityConverter x:Key="EnumEqualityConverter" />
+            <converters:IntegerEqualityConverter x:Key="IntegerEqualityConverter" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <!-- Dice Type Section -->
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="Dice Type:" FontWeight="Bold" Margin="0,0,0,6" />
+            <WrapPanel>
+                <RadioButton Content="d4" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d4}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d4"
+                             ToolTip="Roll a 4-sided die" />
+                <RadioButton Content="d6" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d6}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d6"
+                             ToolTip="Roll a 6-sided die" />
+                <RadioButton Content="d8" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d8}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d8"
+                             ToolTip="Roll an 8-sided die" />
+                <RadioButton Content="d12" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d12}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d12"
+                             ToolTip="Roll a 12-sided die" />
+                <RadioButton Content="d20" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d20}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d20"
+                             ToolTip="Roll a 20-sided die" />
+                <RadioButton Content="d100" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d100}"
+                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d100"
+                             ToolTip="Roll a 100-sided die (percentile)" />
+            </WrapPanel>
+        </StackPanel>
+
+        <!-- Quantity Section -->
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="Quantity:" FontWeight="Bold" Margin="0,0,0,6" />
+            <DockPanel>
+                <ComboBox DockPanel.Dock="Right" Width="60" Margin="8,0,0,0"
+                          ItemsSource="{Binding QuantityDropdownOptions}"
+                          SelectedItem="{Binding SelectedQuantityDropdown}"
+                          ToolTip="Enter custom quantity" />
+                <WrapPanel>
+                    <RadioButton Content="1" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=1}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="1" />
+                    <RadioButton Content="2" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=2}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="2" />
+                    <RadioButton Content="3" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=3}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="3" />
+                    <RadioButton Content="4" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=4}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="4" />
+                    <RadioButton Content="5" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=5}"
+                                 Command="{Binding SelectQuantityCommand}" CommandParameter="5" />
+                </WrapPanel>
+            </DockPanel>
+        </StackPanel>
+
+        <!-- Modifier Section -->
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="Modifier:" FontWeight="Bold" Margin="0,0,0,6" />
+            <DockPanel>
+                <ComboBox DockPanel.Dock="Right" Width="60" Margin="8,0,0,0"
+                          ItemsSource="{Binding ModifierDropdownOptions}"
+                          SelectedItem="{Binding SelectedModifierDropdown}"
+                          ToolTip="Enter custom modifier" />
+                <WrapPanel>
+                    <RadioButton Content="-2" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=-2}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="-2" />
+                    <RadioButton Content="-1" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=-1}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="-1" />
+                    <RadioButton Content="0" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=0}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="0" />
+                    <RadioButton Content="+1" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=1}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="1" />
+                    <RadioButton Content="+2" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=2}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="2" />
+                    <RadioButton Content="+3" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=3}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="3" />
+                    <RadioButton Content="+4" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=4}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="4" />
+                    <RadioButton Content="+5" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
+                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=5}"
+                                 Command="{Binding SelectModifierCommand}" CommandParameter="5" />
+                </WrapPanel>
+            </DockPanel>
+        </StackPanel>
+
+        <!-- Roll Mode Section -->
+        <StackPanel Margin="0,0,0,12">
+            <TextBlock Text="Roll Mode:" FontWeight="Bold" Margin="0,0,0,6" />
+            <WrapPanel>
+                <RadioButton Content="Normal" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Normal}}"
+                             ToolTip="Roll normally" />
+                <RadioButton Content="Advantage" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Advantage}}"
+                             ToolTip="Roll twice and take the higher result (d20 only)" />
+                <RadioButton Content="Disadvantage" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
+                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Disadvantage}}"
+                             ToolTip="Roll twice and take the lower result (d20 only)" />
+            </WrapPanel>
+        </StackPanel>
+
+        <!-- Roll Button -->
+        <Button Content="Roll" Command="{Binding RollCommand}" 
+                Height="40" FontSize="16" FontWeight="Bold" Margin="0,4,0,0"
+                Background="#4CAF50" Foreground="White" BorderThickness="0" Cursor="Hand"
+                Style="{StaticResource RollButtonStyle}"
+                ToolTip="Roll the dice with current settings" />
+    </StackPanel>
+</UserControl>
