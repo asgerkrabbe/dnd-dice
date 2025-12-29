@@ -120,6 +120,19 @@ public class MacroTests : IDisposable
     }
 
     [Fact]
+    public void BuildsConciseCompositionSummary()
+    {
+        var macro = new Macro
+        {
+            Name = "Test",
+            HitExpression = " 2d6 +1",
+            DamageExpression = "d8-2"
+        };
+
+        Assert.Equal("Hit: 2d6+1 | Damage: 1d8-2", macro.CompositionSummary);
+    }
+
+    [Fact]
     public void AllowsNullMacroListFromDeserialization()
     {
         var nullJson = "null";

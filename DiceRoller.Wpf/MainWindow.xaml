@@ -6,10 +6,11 @@
         xmlns:models="clr-namespace:DiceEngine.Models;assembly=DiceEngine"
         xmlns:converters="clr-namespace:DiceRoller.Wpf.Converters"
         mc:Ignorable="d"
-        Title="DnD Dice Roller" Height="500" Width="480">
+        Title="DnD Dice Roller" Height="500" Width="480" MinHeight="300" MinWidth="400">
     <Window.InputBindings>
         <KeyBinding Command="{Binding OpenMacroEditorCommand}" Key="M" Modifiers="Control" />
         <KeyBinding Command="{Binding ToggleMacroReorderButtonsCommand}" Key="R" Modifiers="Control" />
+        <KeyBinding Command="{Binding ToggleMacroDetailsCommand}" Key="D" Modifiers="Control" />
     </Window.InputBindings>
     <Window.Resources>
         <converters:EqualityConverter x:Key="EqualityConverter" />
@@ -98,6 +99,7 @@
                 <MenuItem Header="Toggle Macro _Edit Buttons" Command="{Binding ToggleMacroEditButtonsCommand}" />
                 <MenuItem Header="Toggle Macro _Delete Buttons" Command="{Binding ToggleMacroDeleteButtonsCommand}" />
                 <MenuItem Header="Toggle Macro _Reorder Buttons" Command="{Binding ToggleMacroReorderButtonsCommand}" InputGestureText="Ctrl+R" />
+                <MenuItem Header="Toggle Macro _Details" Command="{Binding ToggleMacroDetailsCommand}" InputGestureText="Ctrl+D" />
             </MenuItem>
             <MenuItem Header="_Macro">
                 <MenuItem Header="_Open Macro Editor" Command="{Binding OpenMacroEditorCommand}" InputGestureText="Ctrl+M" />
@@ -113,19 +115,20 @@
             </MenuItem>
         </Menu>
 
-        <Grid Margin="16">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Margin="16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <!-- Dice Type Section -->
+            <!-- Dice Type Section -->
         <StackPanel Grid.Row="0" Margin="0,0,0,12">
             <TextBlock Text="Dice Type:" FontWeight="Bold" Margin="0,0,0,6" />
             <WrapPanel>
@@ -269,7 +272,7 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="180" />
+                <ColumnDefinition Width="200" />
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Orientation="Vertical">
@@ -288,7 +291,7 @@
 
             <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" />
 
-            <StackPanel Grid.Column="2" Orientation="Vertical">
+            <StackPanel Grid.Column="2" Orientation="Vertical" Margin="0,0,4,0">
                 <DockPanel>
                     <TextBlock Text="History" FontSize="14" FontWeight="Bold" Margin="0,0,0,4" />
                     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
@@ -373,8 +376,12 @@
                                                         CommandParameter="{Binding}" />
                                             </StackPanel>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding Category}" FontWeight="Bold" Foreground="DarkSlateGray" TextTrimming="CharacterEllipsis" Margin="0,2,0,0" />
-                                        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Foreground="#444" Margin="0,2,0,0" />
+                                        <TextBlock Text="{Binding CompositionSummary}" TextWrapping="Wrap" FontSize="12" Foreground="#222" Margin="0,2,0,0" />
+                                        <StackPanel Orientation="Vertical" Margin="0,2,0,0"
+                                                    Visibility="{Binding DataContext.ShowMacroDetails, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="{Binding Category}" FontWeight="Bold" Foreground="DarkSlateGray" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Foreground="#444" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -384,5 +391,6 @@
             </DockPanel>
         </StackPanel>
     </Grid>
+        </ScrollViewer>
     </DockPanel>
 </Window>

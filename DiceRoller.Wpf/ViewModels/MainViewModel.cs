@@ -34,6 +34,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private bool _showMacroDeleteButtons = false;
     private bool _showMacroEditButtons = false;
     private bool _showMacroReorderButtons = false;
+    private bool _showMacroDetails = false;
     private string _macroCategory = string.Empty;
     private string _macroDescription = string.Empty;
 
@@ -65,6 +66,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         ExitCommand = new RelayCommand(ExecuteExit);
         ToggleMacroReorderButtonsCommand = new RelayCommand(ExecuteToggleMacroReorderButtons);
         OpenMacroEditorCommand = new RelayCommand(ExecuteOpenMacroEditor);
+        ToggleMacroDetailsCommand = new RelayCommand(ExecuteToggleMacroDetails);
 
         // Keep CanDeleteMacro accurate when the macro list changes
         Macros.CollectionChanged += (_, __) => OnPropertyChanged(nameof(CanDeleteMacro));
@@ -96,6 +98,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public ICommand ExitCommand { get; }
     public ICommand ToggleMacroReorderButtonsCommand { get; }
     public ICommand OpenMacroEditorCommand { get; }
+    public ICommand ToggleMacroDetailsCommand { get; }
 
     public ObservableCollection<string> RollHistory { get; }
     public ObservableCollection<Macro> Macros { get; }
@@ -228,6 +231,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         get => _showMacroReorderButtons;
         set => SetField(ref _showMacroReorderButtons, value);
+    }
+
+    public bool ShowMacroDetails
+    {
+        get => _showMacroDetails;
+        set => SetField(ref _showMacroDetails, value);
     }
 
     public bool CanDeleteMacro =>
@@ -651,6 +660,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
     private void ExecuteToggleMacroReorderButtons()
     {
         ShowMacroReorderButtons = !ShowMacroReorderButtons;
+    }
+
+    private void ExecuteToggleMacroDetails()
+    {
+        ShowMacroDetails = !ShowMacroDetails;
+        StatusMessage = ShowMacroDetails ? "Macro details shown." : "Macro details hidden.";
     }
 
     private void ExecuteEditMacro(Macro? macro)
