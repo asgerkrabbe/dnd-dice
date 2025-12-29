@@ -330,7 +330,17 @@ public sealed class MainViewModel : INotifyPropertyChanged
     /// Gets the composed text of the last roll result for clipboard operations.
     /// Combines TotalText, RollsText, and AdvantageText with newline separators.
     /// </summary>
-    public string LastResultText => ComposeLastResultText();
+    public string LastResultText
+    {
+        get
+        {
+            var parts = new List<string>();
+            if (!string.IsNullOrWhiteSpace(TotalText)) parts.Add(TotalText);
+            if (!string.IsNullOrWhiteSpace(RollsText)) parts.Add(RollsText);
+            if (!string.IsNullOrWhiteSpace(AdvantageText)) parts.Add(AdvantageText);
+            return string.Join("\n", parts);
+        }
+    }
 
     private void ExecuteSelectDiceType(string? diceType)
     {
@@ -523,15 +533,6 @@ public sealed class MainViewModel : INotifyPropertyChanged
         StatusMessage = ShowMacroDeleteButtons ? "Macro delete buttons shown." : "Macro delete buttons hidden.";
     }
 
-    private string ComposeLastResultText()
-    {
-        var parts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(TotalText)) parts.Add(TotalText);
-        if (!string.IsNullOrWhiteSpace(RollsText)) parts.Add(RollsText);
-        if (!string.IsNullOrWhiteSpace(AdvantageText)) parts.Add(AdvantageText);
-        return string.Join("\n", parts);
-    }
-
     private string GetMacrosPath()
     {
         var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "DnDDice");
@@ -566,7 +567,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         catch (IOException ex)
         {
             LogToFile($"I/O error loading macros: {ex.GetType().Name}: {ex.Message}");
-            TryMoveCorruptedMacroFile(path);
+            // I/O errors (file in use, network issues) don't indicate corruption
             Macros.Clear();
         }
         catch (UnauthorizedAccessException ex)
