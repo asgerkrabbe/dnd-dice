@@ -326,6 +326,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Gets the composed text of the last roll result for clipboard operations.
+    /// Combines TotalText, RollsText, and AdvantageText with newline separators.
+    /// </summary>
     public string LastResultText => ComposeLastResultText();
 
     private void ExecuteSelectDiceType(string? diceType)
@@ -549,7 +553,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 {
                     Macros.Add(m);
                 }
-                LogToFile($"Successfully loaded {loaded.Count} macros from {path}");
+                LogToFile($"Successfully loaded {Macros.Count} macros from {path}");
             }
         }
         catch (JsonException ex)
@@ -572,6 +576,11 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>
+    /// Attempts to move a corrupted macro file to a .bad.json backup.
+    /// If the move operation fails, the error is logged but not thrown to allow the application to start.
+    /// </summary>
+    /// <param name="path">The path to the corrupted macro file to be moved.</param>
     private void TryMoveCorruptedMacroFile(string path)
     {
         try
@@ -917,6 +926,9 @@ public sealed class MainViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
+    /// <summary>
+    /// Removes oldest entries from RollHistory to keep it within the MaxHistoryEntries limit.
+    /// </summary>
     private void TrimHistoryToLimit()
     {
         while (RollHistory.Count > MaxHistoryEntries)
