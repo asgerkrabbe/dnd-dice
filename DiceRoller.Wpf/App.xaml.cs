@@ -27,6 +27,8 @@ public partial class App : Application
             "Fatal Error",
             MessageBoxButton.OK,
             MessageBoxImage.Error);
+        
+        Environment.Exit(1);
     }
 
     private void HandleDispatcherException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
@@ -34,12 +36,13 @@ public partial class App : Application
         LogError("Dispatcher Exception", e.Exception);
         
         MessageBox.Show(
-            $"An error occurred:\n\n{e.Exception.Message}\n\nCheck {LogPath} for details.",
+            $"An error occurred:\n\n{e.Exception.Message}\n\nThe app will now close.\n\nCheck {LogPath} for details.",
             "Error",
             MessageBoxButton.OK,
             MessageBoxImage.Error);
         
         e.Handled = true;
+        Environment.Exit(1);
     }
 
     private static void LogError(string context, Exception? exception)

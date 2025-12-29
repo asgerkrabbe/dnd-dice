@@ -1,0 +1,69 @@
+<UserControl x:Class="DiceRoller.Wpf.Controls.MacrosPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/DiceRollerStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <DockPanel>
+            <TextBlock Text="Macros" FontSize="14" FontWeight="Bold" />
+        </DockPanel>
+        <DockPanel Margin="0,6,0,0">
+            <!-- Macro buttons list -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Height="180">
+                <ItemsControl ItemsSource="{Binding Macros}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Padding="4" Margin="4">
+                                <StackPanel Orientation="Vertical" Width="200">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                        <Button Content="{Binding Name}" Padding="6,4" Margin="0,0,4,0"
+                                                Command="{Binding DataContext.ExecuteMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Execute this macro (Hit + Damage rolls)" />
+                                        <StackPanel Orientation="Vertical" Margin="0,0,0,0">
+                                            <Button Content="Edit" Padding="6,4" Margin="0,0,0,2" ToolTip="Load this macro into the editor for modification"
+                                                    Command="{Binding DataContext.EditMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.ShowMacroEditButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                                            <Button Content="Delete" Padding="6,4" ToolTip="Delete this macro"
+                                                    Command="{Binding DataContext.DeleteMacroItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}"
+                                                    Visibility="{Binding DataContext.ShowMacroDeleteButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
+                                        </StackPanel>
+                                        <StackPanel Orientation="Vertical" Margin="4,0,0,0"
+                                                    Visibility="{Binding DataContext.ShowMacroReorderButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                                            <Button Content="↑" Width="26" Padding="2" ToolTip="Move macro up"
+                                                    Command="{Binding DataContext.MoveMacroUpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}" />
+                                            <Button Content="↓" Width="26" Padding="2" Margin="0,2,0,0" ToolTip="Move macro down"
+                                                    Command="{Binding DataContext.MoveMacroDownCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                    CommandParameter="{Binding}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding CompositionSummary}" TextWrapping="Wrap" FontSize="12" Foreground="#222" Margin="0,2,0,0" />
+                                    <StackPanel Orientation="Vertical" Margin="0,2,0,0"
+                                                Visibility="{Binding DataContext.ShowMacroDetails, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
+                                        <TextBlock Text="{Binding Category}" FontWeight="Bold" Foreground="DarkSlateGray" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Foreground="#444" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </DockPanel>
+    </StackPanel>
+</UserControl>

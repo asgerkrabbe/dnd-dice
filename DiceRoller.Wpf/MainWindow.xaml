@@ -3,87 +3,25 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:models="clr-namespace:DiceEngine.Models;assembly=DiceEngine"
+        xmlns:controls="clr-namespace:DiceRoller.Wpf.Controls"
         xmlns:converters="clr-namespace:DiceRoller.Wpf.Converters"
         mc:Ignorable="d"
-        Title="DnD Dice Roller" Height="500" Width="480" MinHeight="300" MinWidth="400">
+        Title="DnD Dice Roller" Height="650" Width="600" MinHeight="300" MinWidth="400">
     <Window.InputBindings>
         <KeyBinding Command="{Binding OpenMacroEditorCommand}" Key="M" Modifiers="Control" />
         <KeyBinding Command="{Binding ToggleMacroReorderButtonsCommand}" Key="R" Modifiers="Control" />
         <KeyBinding Command="{Binding ToggleMacroDetailsCommand}" Key="D" Modifiers="Control" />
     </Window.InputBindings>
     <Window.Resources>
-        <converters:EqualityConverter x:Key="EqualityConverter" />
-        <converters:EnumEqualityConverter x:Key="EnumEqualityConverter" />
-        <converters:IntegerEqualityConverter x:Key="IntegerEqualityConverter" />
-        <BooleanToVisibilityConverter x:Key="BoolToVis" />
-        
-        <Style x:Key="DiceButtonStyle" TargetType="RadioButton">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="#333"
-                                BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="12,8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Background" Value="#E0E0E0" />
-            <Setter Property="Foreground" Value="Black" />
-            <Setter Property="FontWeight" Value="Normal" />
-            <Setter Property="Margin" Value="4,2" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Style.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter Property="Background" Value="#4A90E2" />
-                    <Setter Property="Foreground" Value="White" />
-                    <Setter Property="FontWeight" Value="Bold" />
-                </Trigger>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#D0D0D0" />
-                </Trigger>
-                <MultiTrigger>
-                    <MultiTrigger.Conditions>
-                        <Condition Property="IsChecked" Value="True" />
-                        <Condition Property="IsMouseOver" Value="True" />
-                    </MultiTrigger.Conditions>
-                    <Setter Property="Background" Value="#3A80D2" />
-                </MultiTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="SelectionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#E0E0E0" />
-            <Setter Property="Foreground" Value="Black" />
-            <Setter Property="FontWeight" Value="Normal" />
-            <Setter Property="Margin" Value="4,2" />
-            <Setter Property="Padding" Value="12,8" />
-            <Setter Property="BorderBrush" Value="#333" />
-            <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#D0D0D0" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/DiceRollerStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:EqualityConverter x:Key="EqualityConverter" />
+            <converters:EnumEqualityConverter x:Key="EnumEqualityConverter" />
+            <converters:IntegerEqualityConverter x:Key="IntegerEqualityConverter" />
+            <BooleanToVisibilityConverter x:Key="BoolToVis" />
+        </ResourceDictionary>
     </Window.Resources>
     
     <DockPanel>
@@ -117,280 +55,21 @@
 
         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <Grid Margin="16">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <!-- Dice Type Section -->
-        <StackPanel Grid.Row="0" Margin="0,0,0,12">
-            <TextBlock Text="Dice Type:" FontWeight="Bold" Margin="0,0,0,6" />
-            <WrapPanel>
-                <RadioButton Content="d4" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d4}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d4"
-                             ToolTip="Roll a 4-sided die" />
-                <RadioButton Content="d6" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d6}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d6"
-                             ToolTip="Roll a 6-sided die" />
-                <RadioButton Content="d8" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d8}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d8"
-                             ToolTip="Roll an 8-sided die" />
-                <RadioButton Content="d12" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d12}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d12"
-                             ToolTip="Roll a 12-sided die" />
-                <RadioButton Content="d20" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d20}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d20"
-                             ToolTip="Roll a 20-sided die" />
-                <RadioButton Content="d100" GroupName="DiceType" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedDiceType, Converter={StaticResource EqualityConverter}, ConverterParameter=1d100}"
-                             Command="{Binding SelectDiceTypeCommand}" CommandParameter="1d100"
-                             ToolTip="Roll a 100-sided die (percentile)" />
-            </WrapPanel>
-        </StackPanel>
+                <!-- Dice Selection Section -->
+                <controls:DiceSelectionControl Grid.Row="0" DataContext="{Binding}" />
 
-        <!-- Quantity Section -->
-        <StackPanel Grid.Row="1" Margin="0,0,0,12">
-            <TextBlock Text="Quantity:" FontWeight="Bold" Margin="0,0,0,6" />
-            <DockPanel>
-                <ComboBox DockPanel.Dock="Right" Width="60" Margin="8,0,0,0"
-                          ItemsSource="{Binding QuantityDropdownOptions}"
-                          SelectedItem="{Binding SelectedQuantityDropdown}"
-                          ToolTip="Enter custom quantity" />
-                <WrapPanel>
-                    <RadioButton Content="1" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=1}"
-                                 Command="{Binding SelectQuantityCommand}" CommandParameter="1" />
-                    <RadioButton Content="2" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=2}"
-                                 Command="{Binding SelectQuantityCommand}" CommandParameter="2" />
-                    <RadioButton Content="3" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=3}"
-                                 Command="{Binding SelectQuantityCommand}" CommandParameter="3" />
-                    <RadioButton Content="4" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=4}"
-                                 Command="{Binding SelectQuantityCommand}" CommandParameter="4" />
-                    <RadioButton Content="5" GroupName="Quantity" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedQuantity, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=5}"
-                                 Command="{Binding SelectQuantityCommand}" CommandParameter="5" />
-                </WrapPanel>
-            </DockPanel>
-        </StackPanel>
+                <!-- Results Section -->
+                <controls:ResultsPanel Grid.Row="1" Margin="0,16,0,0" DataContext="{Binding}" />
 
-        <!-- Modifier Section -->
-        <StackPanel Grid.Row="2" Margin="0,0,0,12">
-            <TextBlock Text="Modifier:" FontWeight="Bold" Margin="0,0,0,6" />
-            <DockPanel>
-                <ComboBox DockPanel.Dock="Right" Width="60" Margin="8,0,0,0"
-                          ItemsSource="{Binding ModifierDropdownOptions}"
-                          SelectedItem="{Binding SelectedModifierDropdown}"
-                          ToolTip="Enter custom modifier" />
-                <WrapPanel>
-                    <RadioButton Content="-2" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=-2}"
-                                 Command="{Binding SelectModifierCommand}" CommandParameter="-2" />
-                    <RadioButton Content="-1" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=-1}"
-                                 Command="{Binding SelectModifierCommand}" CommandParameter="-1" />
-                    <RadioButton Content="0" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=0}"
-                                 Command="{Binding SelectModifierCommand}" CommandParameter="0" />
-                    <RadioButton Content="+1" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=1}"
-                                 Command="{Binding SelectModifierCommand}" CommandParameter="1" />
-                    <RadioButton Content="+2" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=2}"
-                                 Command="{Binding SelectModifierCommand}" CommandParameter="2" />
-                    <RadioButton Content="+3" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=3}"
-                                 Command="{Binding SelectModifierCommand}" CommandParameter="3" />
-                    <RadioButton Content="+4" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=4}"
-                                 Command="{Binding SelectModifierCommand}" CommandParameter="4" />
-                    <RadioButton Content="+5" GroupName="Modifier" Style="{StaticResource DiceButtonStyle}"
-                                 IsChecked="{Binding SelectedModifier, Converter={StaticResource IntegerEqualityConverter}, ConverterParameter=5}"
-                                 Command="{Binding SelectModifierCommand}" CommandParameter="5" />
-                </WrapPanel>
-            </DockPanel>
-        </StackPanel>
-
-        <!-- Roll Mode Section -->
-        <StackPanel Grid.Row="3" Margin="0,0,0,12">
-            <TextBlock Text="Roll Mode:" FontWeight="Bold" Margin="0,0,0,6" />
-            <WrapPanel>
-                <RadioButton Content="Normal" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Normal}}"
-                             ToolTip="Roll normally" />
-                <RadioButton Content="Advantage" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Advantage}}"
-                             ToolTip="Roll twice and take the higher result (d20 only)" />
-                <RadioButton Content="Disadvantage" GroupName="RollMode" Style="{StaticResource DiceButtonStyle}"
-                             IsChecked="{Binding SelectedRollMode, Converter={StaticResource EnumEqualityConverter}, ConverterParameter={x:Static models:RollMode.Disadvantage}}"
-                             ToolTip="Roll twice and take the lower result (d20 only)" />
-            </WrapPanel>
-        </StackPanel>
-
-        <!-- Roll Button -->
-        <Button Grid.Row="4" Content="Roll" Command="{Binding RollCommand}" 
-                Height="40" FontSize="16" FontWeight="Bold" Margin="0,4,0,0"
-                Background="#4CAF50" Foreground="White" BorderThickness="0" Cursor="Hand"
-                ToolTip="Roll the dice with current settings">
-            <Button.Style>
-                <Style TargetType="Button">
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="Button">
-                                <Border Background="{TemplateBinding Background}"
-                                        CornerRadius="6"
-                                        Padding="{TemplateBinding Padding}">
-                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                    <Style.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" Value="#45A049" />
-                        </Trigger>
-                    </Style.Triggers>
-                </Style>
-            </Button.Style>
-        </Button>
-
-        <!-- Results Section -->
-        <Grid Grid.Row="5" Margin="0,16,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="200" />
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0" Orientation="Vertical">
-                <TextBlock Text="Result" FontSize="14" FontWeight="Bold" />
-                <DockPanel>
-                    <TextBlock Text="{Binding TotalText}" />
-                    <Button DockPanel.Dock="Right" Content="Copy" Width="50" Margin="8,0,0,0"
-                            Command="{Binding CopyTextCommand}"
-                            CommandParameter="{Binding DataContext.ComposeLastResultText(), RelativeSource={RelativeSource AncestorType=Window}}"
-                            ToolTip="Copy last result to clipboard" />
-                </DockPanel>
-                <TextBlock Text="{Binding RollsText}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding AdvantageText}" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding StatusMessage}" Foreground="DarkRed" />
-            </StackPanel>
-
-            <GridSplitter Grid.Column="1" Width="8" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Transparent" />
-
-            <StackPanel Grid.Column="2" Orientation="Vertical" Margin="0,0,4,0">
-                <DockPanel>
-                    <TextBlock Text="History" FontSize="14" FontWeight="Bold" Margin="0,0,0,4" />
-                    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                        <Button Content="Clear" Width="60" Margin="6,0,0,0" Command="{Binding ClearHistoryCommand}"
-                                ToolTip="Clear all roll history" />
-                        <Button Content="Toggle" Width="60" Margin="6,0,0,0" Command="{Binding ToggleHistoryCollapsedCommand}"
-                                ToolTip="Show or hide roll history" />
-                    </StackPanel>
-                </DockPanel>
-                <Border BorderBrush="#CCC" BorderThickness="1" CornerRadius="4" Background="#F9F9F9" Margin="0,6,0,0">
-                    <Border.Style>
-                        <Style TargetType="Border">
-                            <Setter Property="Visibility" Value="Visible" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding DataContext.IsHistoryCollapsed, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <!-- Fixed height ~5 rows; keeps layout independent of history length -->
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Height="100">
-                        <ItemsControl ItemsSource="{Binding RollHistory}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding}" Margin="4,2" FontSize="11"
-                                               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Cursor="Hand">
-                                        <TextBlock.InputBindings>
-                                            <MouseBinding MouseAction="LeftClick"
-                                                          Command="{Binding DataContext.CopyTextCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                          CommandParameter="{Binding}" />
-                                        </TextBlock.InputBindings>
-                                    </TextBlock>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Border>
-            </StackPanel>
-        </Grid>
-
-        <!-- Macros Section -->
-        <StackPanel Grid.Row="6" Margin="0,12,0,0">
-            <DockPanel>
-                <TextBlock Text="Macros" FontSize="14" FontWeight="Bold" />
-            </DockPanel>
-            <DockPanel Margin="0,6,0,0">
-                <!-- Macro buttons list -->
-                <ScrollViewer VerticalScrollBarVisibility="Auto" Height="180">
-                    <ItemsControl ItemsSource="{Binding Macros}">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border BorderBrush="#DDD" BorderThickness="1" CornerRadius="4" Padding="4" Margin="4">
-                                    <StackPanel Orientation="Vertical" Width="200">
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
-                                            <Button Content="{Binding Name}" Padding="6,4" Margin="0,0,4,0"
-                                                    Command="{Binding DataContext.ExecuteMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                    CommandParameter="{Binding}"
-                                                    ToolTip="Execute this macro (Hit + Damage rolls)" />
-                                            <StackPanel Orientation="Vertical" Margin="0,0,0,0">
-                                                <Button Content="Edit" Padding="6,4" Margin="0,0,0,2" ToolTip="Load this macro into the editor for modification"
-                                                        Command="{Binding DataContext.EditMacroCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"
-                                                        Visibility="{Binding DataContext.ShowMacroEditButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
-                                                <Button Content="Delete" Padding="6,4" ToolTip="Delete this macro"
-                                                        Command="{Binding DataContext.DeleteMacroItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}"
-                                                        Visibility="{Binding DataContext.ShowMacroDeleteButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}" />
-                                            </StackPanel>
-                                                <StackPanel Orientation="Vertical" Margin="4,0,0,0"
-                                                        Visibility="{Binding DataContext.ShowMacroReorderButtons, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                                                <Button Content="↑" Width="26" Padding="2" ToolTip="Move macro up"
-                                                        Command="{Binding DataContext.MoveMacroUpCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}" />
-                                                <Button Content="↓" Width="26" Padding="2" Margin="0,2,0,0" ToolTip="Move macro down"
-                                                        Command="{Binding DataContext.MoveMacroDownCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                        CommandParameter="{Binding}" />
-                                            </StackPanel>
-                                        </StackPanel>
-                                        <TextBlock Text="{Binding CompositionSummary}" TextWrapping="Wrap" FontSize="12" Foreground="#222" Margin="0,2,0,0" />
-                                        <StackPanel Orientation="Vertical" Margin="0,2,0,0"
-                                                    Visibility="{Binding DataContext.ShowMacroDetails, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="{Binding Category}" FontWeight="Bold" Foreground="DarkSlateGray" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Foreground="#444" />
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </DockPanel>
-        </StackPanel>
-    </Grid>
+                <!-- Macros Section -->
+                <controls:MacrosPanel Grid.Row="2" Margin="0,12,0,0" DataContext="{Binding}" />
+            </Grid>
         </ScrollViewer>
     </DockPanel>
 </Window>
