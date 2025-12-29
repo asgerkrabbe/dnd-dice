@@ -18,7 +18,7 @@
                 <TextBlock Text="{Binding TotalText}" />
                 <Button DockPanel.Dock="Right" Content="Copy" Width="50" Margin="8,0,0,0"
                         Command="{Binding CopyTextCommand}"
-                        CommandParameter="{Binding DataContext.ComposeLastResultText(), RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding DataContext.LastResultText, RelativeSource={RelativeSource AncestorType=Window}}"
                         ToolTip="Copy last result to clipboard" />
             </DockPanel>
             <TextBlock Text="{Binding RollsText}" TextWrapping="Wrap" />

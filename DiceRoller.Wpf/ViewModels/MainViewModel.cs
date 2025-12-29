@@ -18,6 +18,8 @@ namespace DiceRoller.Wpf.ViewModels;
 
 public sealed class MainViewModel : INotifyPropertyChanged
 {
+    private const int MaxHistoryEntries = 50;
+    
     private readonly DiceParser _parser;
     private readonly DiceEngine.Rolling.DiceRoller _roller;
     private string _selectedDiceType = "1d20";
@@ -188,19 +190,37 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public string TotalText
     {
         get => _totalText;
-        private set => SetField(ref _totalText, value);
+        private set
+        {
+            if (SetField(ref _totalText, value))
+            {
+                OnPropertyChanged(nameof(LastResultText));
+            }
+        }
     }
 
     public string RollsText
     {
         get => _rollsText;
-        private set => SetField(ref _rollsText, value);
+        private set
+        {
+            if (SetField(ref _rollsText, value))
+            {
+                OnPropertyChanged(nameof(LastResultText));
+            }
+        }
     }
 
     public string AdvantageText
     {
         get => _advantageText;
-        private set => SetField(ref _advantageText, value);
+        private set
+        {
+            if (SetField(ref _advantageText, value))
+            {
+                OnPropertyChanged(nameof(LastResultText));
+            }
+        }
     }
 
     public string StatusMessage
@@ -306,6 +326,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
     }
 
+    public string LastResultText => ComposeLastResultText();
+
     private void ExecuteSelectDiceType(string? diceType)
     {
         if (!string.IsNullOrEmpty(diceType))
@@ -326,8 +348,18 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void ExecuteRoll()
     {
-        // Build the expression from quantity, dice type, and modifier
-        var expression = $"{SelectedQuantity}{SelectedDiceType.Substring(1)}";
+        // Validate and build the expression from quantity, dice type, and modifier
+        if (string.IsNullOrEmpty(SelectedDiceType) || SelectedDiceType.Length <= 1)
+        {
+            StatusMessage = "Invalid dice type selected.";
+            TotalText = "Total: -";
+            RollsText = "Rolls: -";
+            AdvantageText = string.Empty;
+            return;
+        }
+
+        var diceSuffix = SelectedDiceType.Substring(1);
+        var expression = $"{SelectedQuantity}{diceSuffix}";
         if (SelectedModifier != 0)
         {
             expression += $"{SelectedModifier:+#;-#;0}";
@@ -368,11 +400,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
         RollHistory.Insert(0, historyEntry);
         
-        // Keep history limited to 50 entries
-        while (RollHistory.Count > 50)
-        {
-            RollHistory.RemoveAt(RollHistory.Count - 1);
-        }
+        // Keep history limited
+        TrimHistoryToLimit();
     }
 
     private void ExecuteMacro(Macro? macro)
@@ -453,10 +482,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         }
 
         // Trim history
-        while (RollHistory.Count > 50)
-        {
-            RollHistory.RemoveAt(RollHistory.Count - 1);
-        }
+        TrimHistoryToLimit();
     }
 
     private void ExecuteClearHistory()
@@ -474,9 +500,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 Clipboard.SetText(text);
                 StatusMessage = "Copied to clipboard.";
             }
-            catch
+            catch (Exception ex)
             {
-                StatusMessage = "Unable to copy to clipboard.";
+                StatusMessage = $"Unable to copy to clipboard: {ex.Message}";
+                LogToFile($"Clipboard error: {ex.GetType().Name}: {ex.Message}");
             }
         }
     }
@@ -518,34 +545,47 @@ public sealed class MainViewModel : INotifyPropertyChanged
                 var json = File.ReadAllText(path);
                 var loaded = JsonSerializer.Deserialize<List<Macro>>(json) ?? new List<Macro>();
                 Macros.Clear();
-                foreach (var m in loaded)
+                foreach (var m in loaded.Where(m => !string.IsNullOrWhiteSpace(m.Name)))
                 {
-                    if (!string.IsNullOrWhiteSpace(m.Name))
-                    {
-                        Macros.Add(m);
-                    }
+                    Macros.Add(m);
                 }
                 LogToFile($"Successfully loaded {loaded.Count} macros from {path}");
             }
         }
-        catch (Exception ex)
+        catch (JsonException ex)
         {
-            LogToFile($"Error loading macros: {ex.GetType().Name}: {ex.Message}");
+            LogToFile($"JSON error loading macros: {ex.GetType().Name}: {ex.Message}");
             // If the file is corrupted, move it aside so the app can start
-            try
-            {
-                var badPath = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, "macros.bad.json");
-                if (File.Exists(path))
-                {
-                    File.Move(path, badPath, true);
-                    LogToFile($"Moved corrupted macro file to {badPath}");
-                }
-            }
-            catch (Exception moveEx) 
-            { 
-                LogToFile($"Failed to move corrupted macro file: {moveEx.Message}");
-            }
+            TryMoveCorruptedMacroFile(path);
             Macros.Clear();
+        }
+        catch (IOException ex)
+        {
+            LogToFile($"I/O error loading macros: {ex.GetType().Name}: {ex.Message}");
+            TryMoveCorruptedMacroFile(path);
+            Macros.Clear();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            LogToFile($"Unauthorized access loading macros: {ex.GetType().Name}: {ex.Message}");
+            Macros.Clear();
+        }
+    }
+
+    private void TryMoveCorruptedMacroFile(string path)
+    {
+        try
+        {
+            var badPath = Path.Combine(Path.GetDirectoryName(path) ?? string.Empty, "macros.bad.json");
+            if (File.Exists(path))
+            {
+                File.Move(path, badPath, true);
+                LogToFile($"Moved corrupted macro file to {badPath}");
+            }
+        }
+        catch (Exception moveEx)
+        {
+            LogToFile($"Failed to move corrupted macro file: {moveEx.Message}");
         }
     }
 
@@ -566,9 +606,10 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
     private void ExecuteSaveMacro()
     {
-        if (string.IsNullOrWhiteSpace(MacroName) || string.IsNullOrWhiteSpace(MacroHitExpression) || string.IsNullOrWhiteSpace(MacroDamageExpression))
+        if (string.IsNullOrWhiteSpace(MacroName) ||
+            (string.IsNullOrWhiteSpace(MacroHitExpression) && string.IsNullOrWhiteSpace(MacroDamageExpression)))
         {
-            StatusMessage = "Macro requires name, hit, and damage expressions.";
+            StatusMessage = "Macro requires a name and at least a hit or damage expression.";
             return;
         }
 
@@ -770,10 +811,25 @@ public sealed class MainViewModel : INotifyPropertyChanged
             SaveMacros();
             StatusMessage = $"Imported {added} new, updated {updated} macros.";
         }
+        catch (IOException ex)
+        {
+            StatusMessage = "Failed to import macros due to an I/O error.";
+            LogToFile($"I/O error importing macros: {ex.GetType().Name}: {ex.Message}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            StatusMessage = "Failed to import macros due to insufficient file permissions.";
+            LogToFile($"Unauthorized access importing macros: {ex.GetType().Name}: {ex.Message}");
+        }
+        catch (JsonException ex)
+        {
+            StatusMessage = "Failed to import macros due to a JSON format error.";
+            LogToFile($"JSON error importing macros: {ex.GetType().Name}: {ex.Message}");
+        }
         catch (Exception ex)
         {
-            StatusMessage = "Failed to import macros.";
-            LogToFile($"Error importing macros: {ex.GetType().Name}: {ex.Message}");
+            StatusMessage = "An unexpected error occurred while importing macros.";
+            LogToFile($"Unexpected error importing macros: {ex.GetType().Name}: {ex.Message}");
         }
     }
 
@@ -798,10 +854,25 @@ public sealed class MainViewModel : INotifyPropertyChanged
             File.WriteAllText(dialog.FileName, json);
             StatusMessage = $"Exported {Macros.Count} macros to {dialog.FileName}.";
         }
+        catch (IOException ex)
+        {
+            StatusMessage = "Failed to export macros due to an I/O error.";
+            LogToFile($"I/O error exporting macros: {ex.GetType().Name}: {ex.Message}");
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            StatusMessage = "Failed to export macros due to insufficient file permissions.";
+            LogToFile($"Unauthorized access exporting macros: {ex.GetType().Name}: {ex.Message}");
+        }
+        catch (JsonException ex)
+        {
+            StatusMessage = "Failed to export macros due to a JSON serialization error.";
+            LogToFile($"JSON error exporting macros: {ex.GetType().Name}: {ex.Message}");
+        }
         catch (Exception ex)
         {
-            StatusMessage = "Failed to export macros.";
-            LogToFile($"Error exporting macros: {ex.GetType().Name}: {ex.Message}");
+            StatusMessage = "An unexpected error occurred while exporting macros.";
+            LogToFile($"Unexpected error exporting macros: {ex.GetType().Name}: {ex.Message}");
         }
     }
 
@@ -846,6 +917,14 @@ public sealed class MainViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
+    private void TrimHistoryToLimit()
+    {
+        while (RollHistory.Count > MaxHistoryEntries)
+        {
+            RollHistory.RemoveAt(RollHistory.Count - 1);
+        }
+    }
+
     private static void LogToFile(string message)
     {
         try
@@ -865,10 +944,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
             var logEntry = $"[{timestamp}] {message}{Environment.NewLine}";
             File.AppendAllText(logPath, logEntry);
         }
-        catch
+        catch (Exception ex)
         {
-            // Silently fail to avoid cascading errors
-            System.Diagnostics.Debug.WriteLine($"Failed to log macro operation: {message}");
+            // Intentionally avoid throwing from logging to prevent cascading errors,
+            // but emit diagnostics so failures are still observable.
+            System.Diagnostics.Debug.WriteLine($"Failed to log macro operation: {message}. Exception: {ex}");
+            Console.Error.WriteLine($"Failed to log macro operation: {message}. Exception: {ex}");
         }
     }
 }

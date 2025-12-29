@@ -6,6 +6,8 @@ namespace DiceEngine.Models;
 
 public sealed class Macro
 {
+    private static readonly DiceParser Parser = new DiceParser();
+    
     public string Name { get; set; } = string.Empty;
     public string HitExpression { get; set; } = string.Empty;
     public string DamageExpression { get; set; } = string.Empty;
@@ -41,8 +43,7 @@ public sealed class Macro
             return null;
         }
 
-        var parser = new DiceParser();
-        var result = parser.TryParse(expression);
+        var result = Parser.TryParse(expression);
         var normalized = result.Success && result.Expression is not null
             ? result.Expression.ToString()
             : expression.Trim();

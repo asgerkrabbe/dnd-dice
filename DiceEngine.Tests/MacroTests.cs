@@ -73,12 +73,9 @@ public class MacroTests : IDisposable
 
         var deserialized = JsonSerializer.Deserialize<List<Macro>>(json);
         var validMacros = new List<Macro>();
-        foreach (var m in deserialized ?? new())
+        foreach (var m in (deserialized ?? new()).Where(m => !string.IsNullOrWhiteSpace(m.Name)))
         {
-            if (!string.IsNullOrWhiteSpace(m.Name))
-            {
-                validMacros.Add(m);
-            }
+            validMacros.Add(m);
         }
 
         Assert.Single(validMacros);
@@ -150,6 +147,9 @@ public class MacroTests : IDisposable
                 Directory.Delete(_testDirectory, recursive: true);
             }
         }
-        catch { /* ignore cleanup errors */ }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[MacroTests.Dispose] Failed to clean up test directory '{_testDirectory}': {ex}");
+        }
     }
 }

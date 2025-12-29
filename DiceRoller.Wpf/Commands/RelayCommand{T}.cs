@@ -47,7 +47,8 @@ public sealed class RelayCommand<T> : ICommand
             }
             catch
             {
-                // Fall through to default
+                // Type conversion failed; return default value to gracefully handle
+                // incompatible parameter types without breaking command execution
             }
         }
 
