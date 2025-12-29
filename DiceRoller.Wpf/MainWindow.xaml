@@ -44,12 +44,6 @@
                 <MenuItem Header="_Save Macro" Command="{Binding SaveMacroCommand}" />
                 <MenuItem Header="_Clear Macro Fields" Command="{Binding ClearMacroFieldsCommand}" />
                 <MenuItem Header="_Delete Macro" Command="{Binding DeleteMacroCommand}" IsEnabled="{Binding CanDeleteMacro}" />
-                <Separator />
-                <MenuItem Header="_Import Macros" Command="{Binding ImportMacrosCommand}" />
-                <MenuItem Header="E_xport Macros" Command="{Binding ExportMacrosCommand}" />
-                <Separator />
-                <MenuItem Header="Toggle Macro _Edit Buttons" Command="{Binding ToggleMacroEditButtonsCommand}" />
-                <MenuItem Header="Toggle Macro _Delete Buttons" Command="{Binding ToggleMacroDeleteButtonsCommand}" />
             </MenuItem>
         </Menu>
 
